@@ -13,7 +13,7 @@ export const siteConfig: SiteConfig = {
 	subtitle: "xize",
 
 	// 站点 URL
-	site_url: "https://firefly.cuteleaf.cn",
+	site_url: "https://xize.cn.mt",
 
 	// 站点描述
 	description:

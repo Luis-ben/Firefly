@@ -1,0 +1,112 @@
+
+> firefly@6.10.0 dev D:\desktop\blog\Firefly
+> astro dev "--host" "127.0.0.1" "--port" "4321"
+
+[vite] connected.
+[2m18:54:25[22m [34m[types][39m Generated [2m1ms[22m
+[vite] connected.
+[2m18:54:26[22m [34m[content][39m Syncing content
+[2m18:54:26[22m [34m[content][39m Synced content
+[42m[1m astro [22m[49m [32mv6.1.9[39m [2mready in[22m 4854 [2mms[22m
+[2m┃[22m Local    [36mhttp://127.0.0.1:4321/[39m
+[2m18:54:26[22m [32mwatching for file changes...[39m
+[2m18:54:42[22m [34m[200][39m / [2m272ms[22m
+[2m18:55:12[22m [34m[200][39m / [2m25ms[22m
+[2m18:55:13[22m [34m[200][39m /api/allPostMeta.json [2m2ms[22m
+[2m18:55:13[22m [34m[200][39m / [2m26ms[22m
+[2m18:55:16[22m [34m[200][39m /posts/draft/ [2m2664ms[22m
+[2m18:55:16[22m [34m[200][39m /posts/katex-math-example/ [2m2669ms[22m
+[2m18:55:16[22m [34m[200][39m /posts/encrypted-demo/ [2m2547ms[22m
+[2m18:55:17[22m [34m[200][39m /posts/mdx-example/ [2m2801ms[22m
+[2m18:55:17[22m [34m[200][39m /posts/markdown-extended/ [2m2880ms[22m
+[2m18:55:17[22m [34m[200][39m /posts/firefly-layout-system/ [2m25ms[22m
+[2m18:55:17[22m [34m[200][39m /posts/code-examples/ [2m18ms[22m
+[2m18:55:17[22m [34m[200][39m /posts/guide/ [2m25ms[22m
+[2m18:55:17[22m [34m[200][39m /posts/firefly/ [2m18ms[22m
+[2m18:55:17[22m [34m[200][39m /about/ [2m336ms[22m
+[2m18:55:17[22m [34m[200][39m /about/ [2m29ms[22m
+[2m18:55:17[22m [34m[200][39m /archive/ [2m372ms[22m
+[2m18:55:17[22m [34m[200][39m /archive/ [2m371ms[22m
+[2m18:55:17[22m [34m[200][39m /archive/ [2m312ms[22m
+[2m18:55:17[22m [34m[200][39m /archive/ [2m311ms[22m
+[2m18:55:17[22m [34m[200][39m /archive/ [2m191ms[22m
+[2m18:55:31[22m [34m[200][39m / [2m20ms[22m
+[2m18:55:31[22m [34m[200][39m /api/allPostMeta.json [2m1ms[22m
+[2m18:55:31[22m [34m[200][39m / [2m15ms[22m
+[2m19:20:35[22m [34m[200][39m / [2m20ms[22m
+[2m19:20:35[22m [34m[200][39m /posts/firefly/ [2m70ms[22m
+[2m19:20:35[22m [34m[200][39m /api/allPostMeta.json [2m1ms[22m
+[2m19:20:35[22m [34m[200][39m / [2m11ms[22m
+[2m19:20:37[22m [34m[200][39m /posts/firefly/ [2m16ms[22m
+[2m19:20:37[22m [34m[200][39m /archive/ [2m12ms[22m
+[2m19:20:37[22m [34m[200][39m /archive/ [2m8ms[22m
+[2m22:15:20[22m [34m[200][39m /archive/ [2m67ms[22m
+[2m22:15:21[22m [34m[200][39m /api/allPostMeta.json [2m2ms[22m
+[2m22:15:22[22m [34m[200][39m /_image/ [2m933ms[22m
+[2m22:15:22[22m [34m[200][39m /_image/ [2m1688ms[22m
+[2m22:15:22[22m [34m[200][39m /archive/ [2m9ms[22m
+[2m22:17:08[22m [34m[200][39m /posts/encrypted-demo/ [2m35ms[22m
+[2m22:17:08[22m [34m[200][39m /posts/firefly/ [2m49ms[22m
+[2m22:17:08[22m [34m[200][39m /posts/code-examples/ [2m50ms[22m
+[2m22:20:47[22m [34m[watch][39m src/config/siteConfig.ts
+[2m22:20:47[22m [34m[watch][39m src/config/siteConfig.ts
+[vite] program reload
+[2m22:20:54[22m [34m[watch][39m src/config/siteConfig.ts
+[2m22:20:54[22m [34m[watch][39m src/config/siteConfig.ts
+[vite] program reload
+[2m22:20:57[22m [34m[200][39m /archive/ [2m2526ms[22m
+[2m22:20:57[22m [34m[200][39m /archive/ [2m2530ms[22m
+[2m22:20:57[22m [34m[200][39m /api/allPostMeta.json [2m3ms[22m
+[2m22:20:59[22m [34m[200][39m /archive/ [2m31ms[22m
+[2m22:21:11[22m [34m[watch][39m src/config/siteConfig.ts
+[2m22:21:11[22m [34m[watch][39m src/config/siteConfig.ts
+[vite] program reload
+[2m22:21:14[22m [34m[200][39m /archive/ [2m181ms[22m
+[2m22:21:14[22m [34m[200][39m /api/allPostMeta.json [2m1ms[22m
+[2m22:21:15[22m [34m[200][39m /_image/ [2m809ms[22m
+[2m22:21:15[22m [34m[200][39m /archive/ [2m10ms[22m
+[2m22:22:40[22m [34m[200][39m /posts/code-examples/ [2m238ms[22m
+[2m22:22:40[22m [34m[200][39m /archive/ [2m25ms[22m
+[2m22:25:19[22m [34m[watch][39m src/config/siteConfig.ts
+[2m22:25:19[22m [34m[watch][39m src/config/siteConfig.ts
+[vite] program reload
+[2m22:25:21[22m [34m[200][39m /archive/ [2m179ms[22m
+[2m22:25:21[22m [34m[200][39m /api/allPostMeta.json [2m2ms[22m
+[2m22:25:23[22m [34m[200][39m /_image/ [2m1458ms[22m
+[2m22:25:24[22m [34m[200][39m /archive/ [2m20ms[22m
+[2m22:25:24[22m [34m[watch][39m src/config/siteConfig.ts
+[2m22:25:24[22m [34m[watch][39m src/config/siteConfig.ts
+[vite] program reload
+[2m22:25:26[22m [34m[200][39m /archive/ [2m160ms[22m
+[2m22:25:26[22m [34m[200][39m /api/allPostMeta.json [2m1ms[22m
+[2m22:25:27[22m [34m[200][39m /archive/ [2m17ms[22m
+[2m22:25:36[22m [34m[watch][39m src/config/siteConfig.ts
+[2m22:25:36[22m [34m[watch][39m src/config/siteConfig.ts
+[vite] program reload
+[2m22:25:39[22m [34m[200][39m /archive/ [2m160ms[22m
+[2m22:25:39[22m [34m[200][39m /api/allPostMeta.json [2m1ms[22m
+[2m22:25:40[22m [34m[200][39m /archive/ [2m9ms[22m
+[2m22:25:58[22m [34m[watch][39m src/config/siteConfig.ts
+[2m22:25:58[22m [34m[watch][39m src/config/siteConfig.ts
+[vite] program reload
+[2m22:26:01[22m [34m[200][39m /archive/ [2m177ms[22m
+[2m22:26:01[22m [34m[200][39m /api/allPostMeta.json [2m2ms[22m
+[2m22:26:02[22m [34m[200][39m /archive/ [2m9ms[22m
+[2m22:26:46[22m [34m[watch][39m src/config/siteConfig.ts
+[2m22:26:46[22m [34m[watch][39m src/config/siteConfig.ts
+[vite] program reload
+[2m22:26:47[22m [34m[watch][39m src/config/siteConfig.ts
+[2m22:26:47[22m [34m[watch][39m src/config/siteConfig.ts
+[vite] program reload
+[2m22:26:50[22m [34m[200][39m /archive/ [2m2195ms[22m
+[2m22:26:50[22m [34m[200][39m /archive/ [2m2196ms[22m
+[2m22:26:50[22m [34m[200][39m /api/allPostMeta.json [2m3ms[22m
+[2m22:26:52[22m [34m[200][39m /_image/ [2m793ms[22m
+[2m22:26:52[22m [34m[200][39m /archive/ [2m20ms[22m
+[2m22:26:56[22m [34m[watch][39m src/config/siteConfig.ts
+[2m22:26:56[22m [34m[watch][39m src/config/siteConfig.ts
+[vite] program reload
+[2m22:26:58[22m [34m[200][39m /archive/ [2m179ms[22m
+[2m22:26:59[22m [34m[200][39m /api/allPostMeta.json [2m1ms[22m
+[2m22:27:01[22m [34m[200][39m /_image/ [2m1595ms[22m
+[2m22:27:01[22m [34m[200][39m /archive/ [2m8ms[22m

@@ -36,4 +36,4 @@ Firefly-docs/
 
 cache/
 package/
-.obsidian/
+.obsidian/.astro-dev*.log 

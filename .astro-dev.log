@@ -1,0 +1,69 @@
+[34m▶ Astro collects anonymous usage data.[39m
+  This information helps us improve Astro.
+  Run "astro telemetry disable" to opt-out.
+  [36m[4mhttps://astro.build/telemetry[24m[39m
+
+[vite] connected.
+[2m18:35:59[22m [34m[types][39m Generated [2m2ms[22m
+[vite] connected.
+[2m18:36:00[22m [34m[content][39m Syncing content
+
+[43m[30m update [39m[49m [33m▶ New version of Astro available: 6.3.1[39m
+  Run [36mpnpm dlx @astrojs/upgrade[39m to update
+
+[2m18:36:01[22m [34m[content][39m Synced content
+[2m18:36:01[22m [34m[vite][39m Forced re-optimization of dependencies
+[42m[1m astro [22m[49m [32mv6.1.9[39m [2mready in[22m 8068 [2mms[22m
+[2m┃[22m Local    [36mhttp://127.0.0.1:4321/[39m
+[2m18:36:01[22m [32mwatching for file changes...[39m
+[2m18:36:13[22m [34m[200][39m / [2m278ms[22m
+[2m18:41:45[22m [34m[200][39m / [2m32ms[22m
+[2m18:41:58[22m [34m[200][39m / [2m25ms[22m
+[2m18:41:59[22m [34m[vite][39m [32m✨ new dependencies optimized: [33mastro/runtime/client/dev-toolbar/entrypoint.js, @swup/astro/serialise, @swup/astro/idle, @swup/astro/client/Swup, @swup/astro/client/SwupA11yPlugin, @swup/astro/client/SwupPreloadPlugin, @swup/astro/client/SwupHeadPlugin, @swup/astro/client/SwupScriptsPlugin[32m[39m
+[2m18:41:59[22m [34m[vite][39m [32m✨ optimized dependencies changed. reloading[39m
+[2m18:42:00[22m [34m[200][39m /_image/ [2m768ms[22m
+[2m18:42:00[22m [34m[200][39m /_image/ [2m848ms[22m
+[2m18:42:01[22m [34m[200][39m /_image/ [2m1360ms[22m
+[2m18:42:01[22m [34m[vite][39m [32m✨ new dependencies optimized: [33m@fancyapps/ui[32m[39m
+[2m18:42:01[22m [34m[vite][39m [32m✨ optimized dependencies changed. reloading[39m
+[2m18:42:01[22m [34m[200][39m /api/allPostMeta.json [2m3ms[22m
+[2m18:42:01[22m [34m[200][39m /_image/ [2m835ms[22m
+[2m18:42:01[22m [34m[200][39m /_image/ [2m869ms[22m
+[2m18:42:01[22m [34m[200][39m /_image/ [2m360ms[22m
+[2m18:42:01[22m [34m[200][39m /_image/ [2m434ms[22m
+[2m18:42:01[22m [34m[200][39m /_image/ [2m2127ms[22m
+[2m18:42:01[22m [34m[200][39m /_image/ [2m1449ms[22m
+[2m18:42:02[22m [34m[200][39m /_image/ [2m432ms[22m
+[2m18:42:07[22m [34m[200][39m /posts/guide/ [2m1912ms[22m
+[2m18:42:07[22m [34m[200][39m /posts/code-examples/ [2m588ms[22m
+[2m18:42:07[22m [34m[200][39m /api/allPostMeta.json [2m2ms[22m
+[2m18:42:07[22m [34m[200][39m /api/allPostMeta.json [2m2ms[22m
+[2m18:42:08[22m [34m[vite][39m [32m✨ new dependencies optimized: [33mdayjs[32m[39m
+[2m18:42:08[22m [34m[vite][39m [32m✨ optimized dependencies changed. reloading[39m
+[2m18:42:08[22m [34m[200][39m /posts/code-examples/ [2m44ms[22m
+[2m18:42:08[22m [34m[200][39m /_image/ [2m640ms[22m
+[2m18:42:08[22m [34m[200][39m /_image/ [2m1173ms[22m
+[2m18:42:09[22m [34m[200][39m /api/allPostMeta.json [2m1ms[22m
+[2m18:42:09[22m [34m[200][39m /api/allPostMeta.json [2m1ms[22m
+[2m18:42:09[22m [34m[200][39m /_image/ [2m617ms[22m
+[2m18:42:09[22m [34m[200][39m /_image/ [2m710ms[22m
+[2m18:42:10[22m [34m[200][39m /_image/ [2m1211ms[22m
+[2m18:42:10[22m [34m[200][39m /posts/code-examples/ [2m46ms[22m
+[2m18:42:10[22m [34m[200][39m /about/ [2m91ms[22m
+[2m18:42:12[22m [34m[200][39m /archive/ [2m107ms[22m
+[2m18:42:13[22m [34m[200][39m / [2m27ms[22m
+[2m18:42:13[22m [34m[200][39m /archive/ [2m14ms[22m
+[2m18:42:13[22m [34m[200][39m /posts/firefly/ [2m23ms[22m
+[2m18:42:13[22m [34m[200][39m /posts/guide/ [2m29ms[22m
+[2m18:42:14[22m [34m[200][39m /posts/firefly-layout-system/ [2m21ms[22m
+[2m18:42:14[22m [34m[200][39m /archive/ [2m9ms[22m
+[2m18:42:14[22m [34m[200][39m /archive/ [2m12ms[22m
+[2m18:42:14[22m [34m[200][39m /posts/encrypted-demo/ [2m26ms[22m
+[2m18:42:14[22m [34m[200][39m /posts/katex-math-example/ [2m22ms[22m
+[2m18:42:14[22m [34m[200][39m /posts/mdx-example/ [2m34ms[22m
+[2m18:42:15[22m [34m[200][39m /archive/ [2m14ms[22m
+[2m18:42:15[22m [34m[200][39m /posts/draft/ [2m25ms[22m
+[2m18:42:15[22m [34m[200][39m /posts/markdown-extended/ [2m26ms[22m
+[2m18:42:15[22m [34m[200][39m /archive/ [2m15ms[22m
+[2m18:42:15[22m [34m[200][39m /posts/markdown-mermaid/ [2m27ms[22m
+Terminate batch job (Y/N)? 

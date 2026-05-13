@@ -1,0 +1,79 @@
+---
+interface Props {
+	pageSize: number;
+}
+
+const { pageSize } = Astro.props;
+---
+
+<script
+	is:inline
+	define:vars={{
+		pageSize,
+		pollMs: 15000,
+	}}
+>
+	(function () {
+		function shouldEnableLiveFeed() {
+			return !(
+				(location.hostname === "127.0.0.1" ||
+					location.hostname === "localhost") &&
+				location.port === "4321"
+			);
+		}
+
+		function resolveCurrentPage() {
+			const path = location.pathname.replace(/^\/+|\/+$/g, "");
+			if (!path) return 1;
+			if (/^\d+$/.test(path)) return Number.parseInt(path, 10);
+			return null;
+		}
+
+		async function syncFeed() {
+			if (!shouldEnableLiveFeed()) return;
+			const currentPage = resolveCurrentPage();
+			if (!currentPage) return;
+
+			const container = document.getElementById("post-list-container");
+			if (!container) return;
+
+			try {
+				const response = await fetch(
+					`/api/live/posts?page=${currentPage}&pageSize=${pageSize}`,
+					{
+						headers: {
+							Accept: "application/json",
+						},
+					},
+				);
+				if (!response.ok) return;
+				const data = await response.json();
+				if (typeof data?.html === "string" && data.html.trim()) {
+					container.innerHTML = data.html;
+				}
+			} catch (error) {
+				console.warn("Live feed sync failed:", error);
+			}
+		}
+
+		function boot() {
+			if (!shouldEnableLiveFeed()) return;
+			if (window.__fireflyLiveFeedTimer) {
+				window.clearInterval(window.__fireflyLiveFeedTimer);
+			}
+			syncFeed();
+			window.__fireflyLiveFeedTimer = window.setInterval(syncFeed, pollMs);
+		}
+
+		if (document.readyState === "loading") {
+			document.addEventListener("DOMContentLoaded", boot, { once: true });
+		} else {
+			boot();
+		}
+
+		document.addEventListener("astro:page-load", boot);
+		document.addEventListener("swup:contentReplaced", () => {
+			window.setTimeout(boot, 50);
+		});
+	})();
+</script>

@@ -6,6 +6,7 @@ import Markdown from "@components/common/Markdown.astro";
 import EncryptedPost from "@components/features/EncryptedPost.astro";
 import KatexManager from "@components/features/KatexManager.astro";
 import License from "@components/misc/License.astro";
+import LivePostSync from "@/components/features/LivePostSync.astro";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
@@ -144,6 +145,7 @@ const relatedPosts = await getRelatedPosts(entry, 5);
 >
   <!-- KaTeX 按需加载 - 仅在文章页面 -->
   <KatexManager slot="head" />
+  <LivePostSync slot="head" siteTitle={siteConfig.title} />
   
   <script
     is:inline
@@ -151,6 +153,7 @@ const relatedPosts = await getRelatedPosts(entry, 5);
     type="application/ld+json"
     set:html={JSON.stringify(jsonLd)}
   />
+  <div id="live-post-main">
   <div
     class="flex w-full rounded-(--radius-large) overflow-hidden relative mb-4"
   >
@@ -538,6 +541,7 @@ const relatedPosts = await getRelatedPosts(entry, 5);
         />
       </div>
     </a>
+  </div>
   </div>
 
   <RecommendedPost relatedPosts={relatedPosts} currentPostId={entry.id} />

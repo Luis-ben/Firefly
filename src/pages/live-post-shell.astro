@@ -1,0 +1,14 @@
+---
+import LivePostSync from "@/components/features/LivePostSync.astro";
+import MainGridLayout from "@/layouts/MainGridLayout.astro";
+import { siteConfig } from "@/config/siteConfig";
+---
+
+<MainGridLayout title="正在加载文章" description="正在加载实时文章内容">
+  <LivePostSync slot="head" siteTitle={siteConfig.title} />
+  <div id="live-post-main" class="w-full">
+    <div class="card-base px-6 md:px-9 py-8 text-center text-75">
+      正在加载文章...
+    </div>
+  </div>
+</MainGridLayout>

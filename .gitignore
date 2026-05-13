@@ -38,3 +38,6 @@ Firefly-docs/
 cache/
 package/
 .obsidian/.astro-dev*.log 
+.admin-server*.log
+.codex-astro-dev*.log
+.astro-dev*.log

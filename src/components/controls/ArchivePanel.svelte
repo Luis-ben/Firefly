@@ -40,6 +40,32 @@ let primaryFilter: ActiveFilter | null = null;
 let secondaryFilters: ActiveFilter[] = [];
 let filteredPostCount = 0;
 
+function shouldUseLiveArchive() {
+	return !(
+		(window.location.hostname === "127.0.0.1" ||
+			window.location.hostname === "localhost") &&
+		window.location.port === "4321"
+	);
+}
+
+function toLivePost(post: {
+	id: string;
+	title: string;
+	tags: string[];
+	category?: string | null;
+	published: string;
+}) {
+	return {
+		id: post.id,
+		data: {
+			category: post.category || "",
+			published: new Date(post.published),
+			tags: Array.isArray(post.tags) ? post.tags : [],
+			title: post.title,
+		},
+	};
+}
+
 function formatDate(date: Date) {
 	const month = (date.getMonth() + 1).toString().padStart(2, "0");
 	const day = date.getDate().toString().padStart(2, "0");
@@ -69,7 +95,7 @@ function formatFilterSummary(filters: ActiveFilter[]) {
 		.join("  ·  ");
 }
 
-onMount(async () => {
+async function rebuildArchive() {
 	let filteredPosts: Post[] = sortedPosts;
 	const currentFilters: ActiveFilter[] = [];
 
@@ -139,6 +165,40 @@ onMount(async () => {
 	groupedPostsArray.sort((a, b) => b.year - a.year);
 
 	groups = groupedPostsArray;
+}
+
+async function refreshLiveArchive() {
+	if (!shouldUseLiveArchive()) return;
+	try {
+		const response = await fetch("/api/live/posts?all=true", {
+			headers: {
+				Accept: "application/json",
+			},
+		});
+		if (!response.ok) return;
+		const data = await response.json();
+		if (Array.isArray(data?.items)) {
+			sortedPosts = data.items.map(toLivePost);
+		}
+	} catch (error) {
+		console.warn("Live archive sync failed:", error);
+	}
+}
+
+onMount(async () => {
+	await refreshLiveArchive();
+	await rebuildArchive();
+
+	const timer = shouldUseLiveArchive()
+		? window.setInterval(async () => {
+				await refreshLiveArchive();
+				await rebuildArchive();
+			}, 15000)
+		: null;
+
+	return () => {
+		if (timer) window.clearInterval(timer);
+	};
 });
 </script>
 

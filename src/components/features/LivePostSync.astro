@@ -1,0 +1,110 @@
+---
+interface Props {
+	siteTitle: string;
+}
+
+const { siteTitle } = Astro.props;
+---
+
+<script
+	is:inline
+	define:vars={{
+		siteTitle,
+		pollMs: 15000,
+	}}
+>
+	(function () {
+		function shouldEnableLivePost() {
+			return !(
+				(location.hostname === "127.0.0.1" ||
+					location.hostname === "localhost") &&
+				location.port === "4321"
+			);
+		}
+
+		function getCurrentSlug() {
+			const match = location.pathname.match(/^\/posts\/(.+?)\/?$/);
+			return match ? decodeURIComponent(match[1]) : "";
+		}
+
+		function updateMeta(name, value) {
+			if (!value) return;
+			const element = document.querySelector(`meta[name="${name}"]`);
+			if (element) element.setAttribute("content", value);
+		}
+
+		async function syncPost() {
+			if (!shouldEnableLivePost()) return;
+			const slug = getCurrentSlug();
+			if (!slug) return;
+
+			const root = document.getElementById("live-post-main");
+			if (!root) return;
+
+			try {
+				const response = await fetch(`/api/live/posts/${encodeURIComponent(slug)}`, {
+					headers: {
+						Accept: "application/json",
+					},
+				});
+
+				if (response.status === 404) {
+					root.innerHTML =
+						'<div class="card-base p-8 text-center text-75">文章不存在或尚未同步到实时内容层。</div>';
+					return;
+				}
+
+				if (!response.ok) return;
+
+				const data = await response.json();
+				if (typeof data?.mainHtml === "string" && data.mainHtml.trim()) {
+					root.innerHTML = data.mainHtml;
+				}
+
+				if (data?.title) {
+					document.title = `${data.title} - ${siteTitle}`;
+				}
+
+				updateMeta("description", data?.description || "");
+
+				const swupContainer = document.getElementById("swup-container");
+				if (swupContainer) {
+					swupContainer.setAttribute(
+						"data-current-post-category",
+						data?.category || "",
+					);
+				}
+
+				const categoryBar = document.getElementById("category-bar");
+				if (categoryBar) {
+					categoryBar.setAttribute(
+						"data-current-post-category",
+						data?.category || "",
+					);
+				}
+			} catch (error) {
+				console.warn("Live post sync failed:", error);
+			}
+		}
+
+		function boot() {
+			if (!shouldEnableLivePost()) return;
+			if (window.__fireflyLivePostTimer) {
+				window.clearInterval(window.__fireflyLivePostTimer);
+			}
+			syncPost();
+			window.__fireflyLivePostTimer = window.setInterval(syncPost, pollMs);
+		}
+
+		if (document.readyState === "loading") {
+			document.addEventListener("DOMContentLoaded", boot, { once: true });
+		} else {
+			boot();
+		}
+
+		document.addEventListener("astro:page-load", boot);
+		document.addEventListener("swup:contentReplaced", () => {
+			window.setTimeout(boot, 50);
+		});
+	})();
+</script>

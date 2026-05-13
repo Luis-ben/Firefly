@@ -14,6 +14,8 @@ const { pageSize } = Astro.props;
 	}}
 >
 	(function () {
+		let lastSignature = "";
+
 		function shouldEnableLiveFeed() {
 			return !(
 				(location.hostname === "127.0.0.1" ||
@@ -27,6 +29,23 @@ const { pageSize } = Astro.props;
 			if (!path) return 1;
 			if (/^\d+$/.test(path)) return Number.parseInt(path, 10);
 			return null;
+		}
+
+		function buildSignature(items) {
+			if (!Array.isArray(items)) return "";
+			return items
+				.map((item) =>
+					[
+						item.id || "",
+						item.published || "",
+						item.updated || "",
+						item.title || "",
+						item.description || "",
+						item.category || "",
+						item.pinned ? "1" : "0",
+					].join("::"),
+				)
+				.join("|");
 		}
 
 		async function syncFeed() {
@@ -48,7 +67,12 @@ const { pageSize } = Astro.props;
 				);
 				if (!response.ok) return;
 				const data = await response.json();
+				const nextSignature = buildSignature(data?.items);
+				if (nextSignature && nextSignature === lastSignature) {
+					return;
+				}
 				if (typeof data?.html === "string" && data.html.trim()) {
+					lastSignature = nextSignature;
 					container.innerHTML = data.html;
 				}
 			} catch (error) {

@@ -1,4 +1,5 @@
 const state = {
+	authenticated: false,
 	current: null,
 	dirty: false,
 	posts: [],
@@ -57,12 +58,14 @@ function bindEvents() {
 	els.authForm.addEventListener("submit", async (event) => {
 		event.preventDefault();
 		state.token = els.token.value.trim();
+		state.authenticated = false;
 		localStorage.setItem("firefly-admin-token", state.token);
 		updateAuthState();
 		await loadPosts();
 	});
 
 	els.logoutButton.addEventListener("click", () => {
+		state.authenticated = false;
 		state.token = "";
 		state.posts = [];
 		state.current = null;
@@ -109,11 +112,18 @@ function bindEvents() {
 }
 
 function updateAuthState() {
-	const loggedIn = Boolean(state.token);
-	els.authStatus.textContent = loggedIn ? "已登录" : "未登录";
-	els.logoutButton.disabled = !loggedIn;
-	els.refreshButton.disabled = !loggedIn;
-	els.newPostButton.disabled = !loggedIn;
+	const hasToken = Boolean(state.token);
+	let statusText = "未登录";
+	if (state.authenticated) {
+		statusText = "认证成功";
+	} else if (hasToken) {
+		statusText = "Token 已填入，待验证";
+	}
+
+	els.authStatus.textContent = statusText;
+	els.logoutButton.disabled = !hasToken;
+	els.refreshButton.disabled = !state.authenticated;
+	els.newPostButton.disabled = !state.authenticated;
 }
 
 async function request(path, options = {}) {
@@ -144,6 +154,8 @@ async function loadPosts() {
 	try {
 		setBusy(true);
 		state.posts = await request("/api/posts?includeDraft=true");
+		state.authenticated = true;
+		updateAuthState();
 		renderPostList();
 		if (state.current?.id) {
 			const exists = state.posts.some((post) => post.id === state.current.id);
@@ -151,7 +163,15 @@ async function loadPosts() {
 		}
 		notify("文章列表已刷新");
 	} catch (error) {
-		notify(error.message, true);
+		if (isUnauthorizedError(error)) {
+			state.authenticated = false;
+			state.posts = [];
+			renderPostList();
+			notify("Token 无效或已过期，请重新输入 ADMIN_TOKEN", true);
+		} else {
+			notify(error.message, true);
+		}
+		updateAuthState();
 	} finally {
 		setBusy(false);
 	}
@@ -365,7 +385,11 @@ function setBusy(busy) {
 		button.disabled = busy || (!state.token && button.id !== "");
 	}
 	updateAuthState();
-	setEditorEnabled(Boolean(state.current) && !busy);
+	setEditorEnabled(Boolean(state.current) && !busy && state.authenticated);
+}
+
+function isUnauthorizedError(error) {
+	return /unauthorized/i.test(error?.message || "");
 }
 
 function updatePreview() {

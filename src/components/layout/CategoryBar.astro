@@ -295,6 +295,17 @@ const archiveUrl = url("/archive/");
       const targetUrl = new URL(pill.href, window.location.href);
       if (targetUrl.origin !== window.location.origin) return;
 
+      if (
+        targetUrl.pathname === window.location.pathname &&
+        targetUrl.search === window.location.search &&
+        targetUrl.hash === window.location.hash
+      ) {
+        event.preventDefault();
+        setActiveCategory(bar, targetUrl);
+        scrollActiveCategoryIntoView(bar, "smooth");
+        return;
+      }
+
       setActiveCategory(bar, targetUrl);
       scrollActiveCategoryIntoView(bar, "auto");
     });

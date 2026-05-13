@@ -1,0 +1,14 @@
+name = "feirefly"
+main = "worker/index.js"
+compatibility_date = "2026-05-08"
+account_id = "95ddfac0682f045a62fa9f0d671d1fcb"
+
+[assets]
+directory = "dist"
+binding = "ASSETS"
+
+[vars]
+GITHUB_OWNER = "Luis-ben"
+GITHUB_REPO = "Firefly"
+GITHUB_BRANCH = "master"
+GITHUB_CONTENT_ROOT = "src/content/posts"

@@ -346,6 +346,22 @@ const siteLang = lang.replace("_", "-");
       const WALLPAPER_FULLSCREEN = "fullscreen";
       const WALLPAPER_OVERLAY = "overlay";
       const WALLPAPER_NONE = "none";
+      const wallpaperDefaultVersion = "overlay-default-2026-05-13";
+      if (
+        isWallpaperSwitchable &&
+        defaultWallpaperMode === WALLPAPER_OVERLAY &&
+        localStorage.getItem("wallpaperDefaultVersion") !== wallpaperDefaultVersion
+      ) {
+        localStorage.setItem("wallpaperMode", WALLPAPER_OVERLAY);
+        localStorage.setItem("wallpaperDefaultVersion", wallpaperDefaultVersion);
+        localStorage.setItem("overlayOpacity", "1");
+        localStorage.setItem("overlayBlur", "0");
+        localStorage.setItem("overlayCardOpacity", String(cardTransparentOpacity));
+        document.documentElement.style.setProperty(
+          "--card-transparent-opacity",
+          String(cardTransparentOpacity)
+        );
+      }
       const wallpaperMode = isWallpaperSwitchable
         ? localStorage.getItem("wallpaperMode") || defaultWallpaperMode
         : defaultWallpaperMode;
@@ -378,8 +394,8 @@ const siteLang = lang.replace("_", "-");
             }
           }
 
-          // 全屏透明模式
-          if (wallpaperMode === WALLPAPER_OVERLAY) {
+          // 所有壁纸模式都使用半透明卡片效果，纯色模式关闭。
+          if (wallpaperMode !== WALLPAPER_NONE) {
             if (document.body) {
               document.body.classList.add("wallpaper-transparent");
             }
@@ -466,6 +482,11 @@ const siteLang = lang.replace("_", "-");
               mainContentWrapper.style.top = "auto";
               mainContentWrapper.style.marginTop = "0.5rem";
               mainContentWrapper.style.zIndex = "30";
+            }
+            if (wallpaperMode !== WALLPAPER_NONE) {
+              mainContentWrapper.classList.add("wallpaper-transparent");
+            } else {
+              mainContentWrapper.classList.remove("wallpaper-transparent");
             }
           }
 

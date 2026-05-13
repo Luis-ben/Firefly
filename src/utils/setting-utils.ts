@@ -471,8 +471,8 @@ function showBannerMode() {
 		}
 	}
 
-	// 移除透明效果（横幅模式不使用半透明）
-	adjustMainContentTransparency(false);
+	// 壁纸模式统一使用半透明卡片效果，保持背景贯穿全站。
+	adjustMainContentTransparency(true);
 
 	// 调整导航栏透明度
 	const navbar = document.getElementById("navbar");
@@ -561,8 +561,8 @@ function showFullscreenMode(prevMainContentTop?: string, animate = false) {
 	// 调整主内容位置
 	adjustMainContentPosition("fullscreen", prevMainContentTop);
 
-	// 移除透明效果（全屏壁纸模式不使用半透明）
-	adjustMainContentTransparency(false);
+	// 壁纸模式统一使用半透明卡片效果，保持背景贯穿全站。
+	adjustMainContentTransparency(true);
 
 	// 调整导航栏透明度
 	const navbar = document.getElementById("navbar");
@@ -835,6 +835,22 @@ export function getStoredWallpaperMode(): WALLPAPER_MODE {
 	if (!isSwitchable) {
 		localStorage.removeItem("wallpaperMode");
 		return backgroundWallpaper.mode;
+	}
+
+	const wallpaperDefaultVersion = "overlay-default-2026-05-13";
+	if (
+		backgroundWallpaper.mode === WALLPAPER_OVERLAY &&
+		localStorage.getItem("wallpaperDefaultVersion") !==
+			wallpaperDefaultVersion
+	) {
+		localStorage.setItem("wallpaperMode", WALLPAPER_OVERLAY);
+		localStorage.setItem("wallpaperDefaultVersion", wallpaperDefaultVersion);
+		localStorage.setItem("overlayOpacity", String(getDefaultOverlayOpacity()));
+		localStorage.setItem("overlayBlur", String(getDefaultOverlayBlur()));
+		localStorage.setItem(
+			"overlayCardOpacity",
+			String(getDefaultOverlayCardOpacity()),
+		);
 	}
 
 	return (

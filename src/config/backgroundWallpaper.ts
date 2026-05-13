@@ -2,7 +2,7 @@ import type { BackgroundWallpaperConfig } from "@/types/config";
 
 export const backgroundWallpaper: BackgroundWallpaperConfig = {
 	// 壁纸模式："banner" 横幅壁纸，"fullscreen" 全屏壁纸，"overlay" 全屏透明，"none" 纯色背景无壁纸
-	mode: "banner",
+	mode: "overlay",
 	// 是否允许用户通过导航栏切换壁纸模式
 	// 设为false可提升性能（只渲染当前模式）
 	// 推荐只选择自己喜欢的模式并关闭切换功能以提升性能
@@ -41,22 +41,28 @@ export const backgroundWallpaper: BackgroundWallpaperConfig = {
 		// 桌面背景图片（支持单张或多张随机）
 		// desktop: "assets/images/DesktopWallpaper/d1.avif",
 		desktop: [
-			"assets/images/DesktopWallpaper/d1.avif",
-			"assets/images/DesktopWallpaper/d2.avif",
-			"assets/images/DesktopWallpaper/d3.avif",
-			"assets/images/DesktopWallpaper/d4.avif",
-			"assets/images/DesktopWallpaper/d5.avif",
-			"assets/images/DesktopWallpaper/d6.avif",
+			"assets/images/MyWallpaper/wallpaper-01.webp",
+			"assets/images/MyWallpaper/wallpaper-02.webp",
+			"assets/images/MyWallpaper/wallpaper-03.webp",
+			"assets/images/MyWallpaper/wallpaper-04.webp",
+			"assets/images/MyWallpaper/wallpaper-05.webp",
+			"assets/images/MyWallpaper/wallpaper-06.webp",
+			"assets/images/MyWallpaper/wallpaper-07.webp",
+			"assets/images/MyWallpaper/wallpaper-08.webp",
+			"assets/images/MyWallpaper/wallpaper-09.webp",
 		],
 		// 移动背景图片（支持单张或多张随机）
 		// mobile: "assets/images/MobileWallpaper/m1.avif",
 		mobile: [
-			"assets/images/MobileWallpaper/m1.avif",
-			"assets/images/MobileWallpaper/m2.avif",
-			"assets/images/MobileWallpaper/m3.avif",
-			"assets/images/MobileWallpaper/m4.avif",
-			"assets/images/MobileWallpaper/m5.avif",
-			"assets/images/MobileWallpaper/m6.avif",
+			"assets/images/MyWallpaper/wallpaper-01.webp",
+			"assets/images/MyWallpaper/wallpaper-02.webp",
+			"assets/images/MyWallpaper/wallpaper-03.webp",
+			"assets/images/MyWallpaper/wallpaper-04.webp",
+			"assets/images/MyWallpaper/wallpaper-05.webp",
+			"assets/images/MyWallpaper/wallpaper-06.webp",
+			"assets/images/MyWallpaper/wallpaper-07.webp",
+			"assets/images/MyWallpaper/wallpaper-08.webp",
+			"assets/images/MyWallpaper/wallpaper-09.webp",
 		],
 	},
 	// 横幅壁纸和全屏壁纸共享配置
@@ -70,18 +76,11 @@ export const backgroundWallpaper: BackgroundWallpaperConfig = {
 			// 是否允许用户通过控制面板切换横幅标题显示
 			switchable: true,
 			// 主页横幅主标题
-			title: "Lovely firefly!",
+			title: "西泽",
 			// 主页横幅主标题字体大小
 			titleSize: "3.8rem",
 			// 主页横幅副标题
-			subtitle: [
-				"In Reddened Chrysalis, I Once Rest",
-				"From Shattered Sky, I Free Fall",
-				"Amidst Silenced Stars, I Deep Sleep",
-				"Upon Lighted Fyrefly, I Soon Gaze",
-				"From Undreamt Night, I Thence Shine",
-				"In Finalized Morrow, I Full Bloom",
-			],
+			subtitle: ["在光影之间，记录生活与思绪", "愿此处安静、温柔，也足够真实"],
 			// 主页横幅副标题字体大小
 			subtitleSize: "1.5rem",
 			typewriter: {
@@ -169,11 +168,11 @@ export const backgroundWallpaper: BackgroundWallpaperConfig = {
 		// 层级，确保壁纸在背景层
 		zIndex: -1,
 		// 壁纸透明度
-		opacity: 0.8,
+		opacity: 1,
 		// 背景模糊度
-		blur: 10,
+		blur: 0,
 		// 卡片透明度，0-1之间，值越小越透明
-		cardOpacity: 0.5,
+		cardOpacity: 0.32,
 	},
 	// 全屏壁纸模式特有配置
 	fullscreen: {

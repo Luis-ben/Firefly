@@ -5,6 +5,9 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
+    "admin": "node scripts/admin-server.js",
+    "dev:admin": "node scripts/dev-with-admin.js",
+    "deploy:worker": "pnpm build && wrangler deploy",
     "check": "astro check",
     "build": "node scripts/generate-icons.js && astro build && pagefind --site dist",
     "preview": "astro preview",
@@ -90,7 +93,8 @@
     "@types/sanitize-html": "^2.16.1",
     "postcss-import": "^16.1.1",
     "postcss-nesting": "^13.0.2",
-    "tailwindcss": "^4.2.4"
+    "tailwindcss": "^4.2.4",
+    "wrangler": "^4.90.0"
   },
   "packageManager": "pnpm@9.14.4"
 }

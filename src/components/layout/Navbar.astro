@@ -106,7 +106,7 @@ if (isLocalSrcLogo) {
                                         <Picture
                                             src={logoImg}
                                             alt={siteConfig.navbar.logo.alt || siteConfig.title}
-                                            class="h-7 w-7 mb-1 mr-2 object-contain"
+                                            class="h-7 w-7 mb-1 mr-2 rounded-full object-cover"
                                             formats={getImageFormats()}
                                             fallbackFormat={getFallbackFormat()}
                                             widths={[28, 56]}
@@ -114,9 +114,9 @@ if (isLocalSrcLogo) {
                                             fetchpriority="high"
                                         />
                                     ) : siteConfig.navbar.logo?.type === "image" ? (
-                                        <img src={url(siteConfig.navbar.logo.value)} alt={siteConfig.navbar.logo.alt || siteConfig.title} class="h-7 w-7 mb-1 mr-2 object-contain" fetchpriority="high" />
+                                        <img src={url(siteConfig.navbar.logo.value)} alt={siteConfig.navbar.logo.alt || siteConfig.title} class="h-7 w-7 mb-1 mr-2 rounded-full object-cover" fetchpriority="high" />
                                     ) : siteConfig.navbar.logo?.type === "url" ? (
-                                        <img src={siteConfig.navbar.logo.value} alt={siteConfig.navbar.logo.alt || siteConfig.title} class="h-7 w-7 mb-1 mr-2 object-contain" fetchpriority="high" />
+                                        <img src={siteConfig.navbar.logo.value} alt={siteConfig.navbar.logo.alt || siteConfig.title} class="h-7 w-7 mb-1 mr-2 rounded-full object-cover" fetchpriority="high" />
                                     ) : (
                                         <Icon name="material-symbols:home-pin-outline" is:inline class="text-[1.75rem] mb-1 mr-2" />
                                     )}

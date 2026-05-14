@@ -5,6 +5,8 @@ const DEFAULT_PAGE_SIZE = 10;
 const LIVE_POST_SHELL_PATH = "/live-post-shell/";
 const LIVE_CACHE_TTL_MS = 10000;
 const LIVE_POLL_MS = 15000;
+const MAX_UPLOAD_SIZE = 10 * 1024 * 1024;
+const GITHUB_UPLOAD_ROOT = "public/uploads";
 const LIVE_SCHEMA_STATEMENTS = [
 	`CREATE TABLE IF NOT EXISTS live_posts (
 		slug TEXT PRIMARY KEY,
@@ -91,6 +93,21 @@ export default {
 			return json(await getLiveStatus(env), 200, true);
 		}
 
+		if (url.pathname === "/api/media/upload" && request.method === "POST") {
+			try {
+				if (!requireAuth(request, env))
+					return json({ error: "Unauthorized" }, 401);
+				const uploaded = await handleMediaUpload(request, env);
+				return json(uploaded, 201, true);
+			} catch (error) {
+				return json(
+					{ error: error.message || "Failed to upload media" },
+					error.statusCode || 500,
+					true,
+				);
+			}
+		}
+
 		if (url.pathname === "/api/live/sync" && request.method === "POST") {
 			try {
 				if (!requireAuth(request, env))
@@ -102,6 +119,18 @@ export default {
 				return json(
 					{ error: error.message || "Failed to sync live store" },
 					error.statusCode || 500,
+					true,
+				);
+			}
+		}
+
+		if (request.method === "GET" && url.pathname.startsWith("/media/")) {
+			try {
+				return await serveMediaAsset(env, url);
+			} catch (error) {
+				return json(
+					{ error: error.message || "Media not found" },
+					error.statusCode || 404,
 					true,
 				);
 			}
@@ -236,6 +265,127 @@ async function handleAdminPostsRequest(request, env, url) {
 			true,
 		);
 	}
+}
+
+async function handleMediaUpload(request, env) {
+	const formData = await request.formData();
+	const file = formData.get("file");
+	const slug = normalizeMediaSlug(String(formData.get("slug") || "post"));
+
+	if (!(file instanceof File)) {
+		const error = new Error("No file uploaded");
+		error.statusCode = 400;
+		throw error;
+	}
+
+	if (!file.type.startsWith("image/")) {
+		const error = new Error("Only image uploads are supported");
+		error.statusCode = 400;
+		throw error;
+	}
+
+	if (file.size <= 0 || file.size > MAX_UPLOAD_SIZE) {
+		const error = new Error("Image size must be between 1 byte and 10 MB");
+		error.statusCode = 400;
+		throw error;
+	}
+
+	const extension = getFileExtension(file.name, file.type);
+	const key = buildMediaKey(slug, extension);
+	const buffer = await file.arrayBuffer();
+
+	if (hasR2MediaBucket(env)) {
+		await env.BLOG_IMAGES.put(key, buffer, {
+			httpMetadata: {
+				contentType: file.type,
+			},
+		});
+		return {
+			key,
+			name: file.name,
+			size: file.size,
+			storage: "r2",
+			url: `/media/${key}`,
+		};
+	}
+
+	if (!hasGithubConfig(env)) {
+		const error = new Error("No media storage is configured");
+		error.statusCode = 503;
+		throw error;
+	}
+
+	const repoPath = `${GITHUB_UPLOAD_ROOT}/${key}`;
+	await putBinaryGithubContent(env, repoPath, buffer, file.type, {
+		message: `media: upload ${key}`,
+	});
+
+	return {
+		key,
+		name: file.name,
+		size: file.size,
+		storage: "github",
+		url: `/media/${key}`,
+	};
+}
+
+async function serveMediaAsset(env, url) {
+	const key = sanitizeMediaKey(url.pathname.replace(/^\/media\/+/, ""));
+	if (!key) {
+		const error = new Error("Media not found");
+		error.statusCode = 404;
+		throw error;
+	}
+
+	if (hasR2MediaBucket(env)) {
+		const object = await env.BLOG_IMAGES.get(key);
+		if (object) {
+			const headers = new Headers();
+			object.writeHttpMetadata(headers);
+			headers.set("Cache-Control", "public, max-age=31536000, immutable");
+			return new Response(object.body, { headers });
+		}
+	}
+
+	if (hasGithubConfig(env)) {
+		const repoPath = `${GITHUB_UPLOAD_ROOT}/${key}`;
+		const githubFile = await getContent(env, repoPath, false);
+		if (githubFile?.content) {
+			const headers = new Headers();
+			headers.set(
+				"Content-Type",
+				getContentTypeFromPath(repoPath) || "application/octet-stream",
+			);
+			headers.set("Cache-Control", "public, max-age=3600");
+			return new Response(decodeBase64ToBytes(githubFile.content), {
+				headers,
+			});
+		}
+
+		const owner = cleanEnv(env.GITHUB_OWNER);
+		const repo = cleanEnv(env.GITHUB_REPO);
+		const branch = cleanEnv(env.GITHUB_BRANCH) || "master";
+		const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${repoPath}`;
+		const response = await fetch(rawUrl, {
+			cf: {
+				cacheEverything: true,
+				cacheTtl: 3600,
+			},
+		});
+		if (response.ok) {
+			const headers = new Headers(response.headers);
+			headers.set("Cache-Control", "public, max-age=3600");
+			return new Response(response.body, {
+				headers,
+				status: response.status,
+				statusText: response.statusText,
+			});
+		}
+	}
+
+	const error = new Error("Media not found");
+	error.statusCode = 404;
+	throw error;
 }
 
 async function listAdminPosts(env, includeDraft) {
@@ -756,6 +906,17 @@ async function putContent(env, filePath, input) {
 	});
 }
 
+async function putBinaryGithubContent(env, filePath, arrayBuffer, contentType, input) {
+	await github(env, `/contents/${encodePath(filePath)}`, {
+		body: {
+			branch: getBranch(env),
+			content: encodeArrayBufferBase64(arrayBuffer),
+			message: input.message,
+		},
+		method: "PUT",
+	});
+}
+
 async function github(env, path, options = {}) {
 	const owner = cleanEnv(env.GITHUB_OWNER);
 	const repo = cleanEnv(env.GITHUB_REPO);
@@ -1070,6 +1231,10 @@ function hasLiveDatabase(env) {
 	return Boolean(env.POSTS_DB && typeof env.POSTS_DB.prepare === "function");
 }
 
+function hasR2MediaBucket(env) {
+	return Boolean(env.BLOG_IMAGES && typeof env.BLOG_IMAGES.put === "function");
+}
+
 function hasGithubConfig(env) {
 	return Boolean(
 		cleanEnv(env.GITHUB_OWNER) &&
@@ -1279,6 +1444,71 @@ function pathExtension(value) {
 	return match ? match[1] : "";
 }
 
+function getFileExtension(fileName, contentType) {
+	const ext = pathExtension(String(fileName || "")).toLowerCase();
+	if (ext && ext.length <= 10) return ext;
+
+	const fallbackMap = {
+		"image/avif": ".avif",
+		"image/gif": ".gif",
+		"image/jpeg": ".jpg",
+		"image/jpg": ".jpg",
+		"image/png": ".png",
+		"image/svg+xml": ".svg",
+		"image/webp": ".webp",
+	};
+
+	return fallbackMap[String(contentType || "").toLowerCase()] || ".bin";
+}
+
+function getContentTypeFromPath(filePath) {
+	const ext = pathExtension(filePath).toLowerCase();
+	return (
+		{
+			".avif": "image/avif",
+			".gif": "image/gif",
+			".jpg": "image/jpeg",
+			".jpeg": "image/jpeg",
+			".png": "image/png",
+			".svg": "image/svg+xml",
+			".webp": "image/webp",
+		}[ext] || "application/octet-stream"
+	);
+}
+
+function normalizeMediaSlug(value) {
+	return String(value || "post")
+		.normalize("NFKD")
+		.toLowerCase()
+		.replace(/[\u0300-\u036f]/g, "")
+		.replace(/[^a-z0-9/_-]+/g, "-")
+		.replace(/\/-+|-+\//g, "/")
+		.replace(/^-+|-+$/g, "")
+		.replace(/^\/+|\/+$/g, "") || "post";
+}
+
+function sanitizeMediaKey(value) {
+	const normalized = String(value || "")
+		.replaceAll("\\", "/")
+		.replace(/^\/+/, "")
+		.replace(/\/+$/, "");
+	if (!normalized || normalized.includes("..")) return "";
+	return normalized;
+}
+
+function buildMediaKey(slug, extension) {
+	const now = new Date();
+	const year = String(now.getFullYear());
+	const month = String(now.getMonth() + 1).padStart(2, "0");
+	const stamp = now
+		.toISOString()
+		.replace(/[-:TZ.]/g, "")
+		.slice(0, 14);
+	const suffix = Math.random().toString(36).slice(2, 8);
+	const safeSlug = slug.split("/").filter(Boolean).join("-");
+	return `posts/${year}/${month}/${safeSlug}-${stamp}-${suffix}${extension}`;
+}
+
 function dirname(value) {
 	const normalized = String(value || "").replaceAll("\\", "/");
 	if (!normalized.includes("/")) return "";
@@ -1305,8 +1535,22 @@ function decodeBase64(value) {
 	return new TextDecoder().decode(bytes);
 }
 
+function decodeBase64ToBytes(value) {
+	const binary = atob(String(value || "").replace(/\s/g, ""));
+	return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+}
+
 function encodeBase64(value) {
 	const bytes = new TextEncoder().encode(value);
+	let binary = "";
+	for (let index = 0; index < bytes.length; index += 0x8000) {
+		binary += String.fromCharCode(...bytes.slice(index, index + 0x8000));
+	}
+	return btoa(binary);
+}
+
+function encodeArrayBufferBase64(arrayBuffer) {
+	const bytes = new Uint8Array(arrayBuffer);
 	let binary = "";
 	for (let index = 0; index < bytes.length; index += 0x8000) {
 		binary += String.fromCharCode(...bytes.slice(index, index + 0x8000));

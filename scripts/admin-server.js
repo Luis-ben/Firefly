@@ -7,6 +7,8 @@ import matter from "gray-matter";
 const projectRoot = process.cwd();
 const adminRoot = path.resolve(projectRoot, "public/admin");
 const postsRoot = path.resolve(projectRoot, "src/content/posts");
+const uploadsRoot = path.resolve(projectRoot, "public/uploads");
+const maxUploadSize = 10 * 1024 * 1024;
 
 await loadEnv();
 
@@ -14,10 +16,16 @@ const host = process.env.ADMIN_HOST || "127.0.0.1";
 const port = Number(process.env.ADMIN_PORT || 8787);
 const contentTypes = {
 	".css": "text/css; charset=utf-8",
+	".gif": "image/gif",
 	".html": "text/html; charset=utf-8",
+	".jpg": "image/jpeg",
+	".jpeg": "image/jpeg",
 	".js": "text/javascript; charset=utf-8",
 	".json": "application/json; charset=utf-8",
+	".png": "image/png",
 	".svg": "image/svg+xml",
+	".webp": "image/webp",
+	".avif": "image/avif",
 };
 
 function sendJson(res, statusCode, data) {
@@ -92,6 +100,22 @@ async function readJson(req) {
 	}
 }
 
+async function readBodyBuffer(req) {
+	const chunks = [];
+	for await (const chunk of req) chunks.push(chunk);
+	return Buffer.concat(chunks);
+}
+
+async function readMultipartForm(req) {
+	const buffer = await readBodyBuffer(req);
+	const request = new Request("http://127.0.0.1/upload", {
+		body: buffer,
+		headers: req.headers,
+		method: req.method,
+	});
+	return request.formData();
+}
+
 async function serveAdminAsset(res, pathname) {
 	const relativePath =
 		pathname === "/admin" || pathname === "/admin/"
@@ -112,6 +136,30 @@ async function serveAdminAsset(res, pathname) {
 			200,
 			body,
 			contentTypes[path.extname(fullPath)] || "application/octet-stream",
+		);
+	} catch {
+		sendText(res, 404, "Not found");
+	}
+}
+
+async function serveUploadedAsset(res, pathname) {
+	const relativePath = pathname.replace(/^\/uploads\/?/, "");
+	const fullPath = path.resolve(uploadsRoot, relativePath);
+	const safeRelativePath = path.relative(uploadsRoot, fullPath);
+
+	if (safeRelativePath.startsWith("..") || path.isAbsolute(safeRelativePath)) {
+		sendText(res, 403, "Forbidden");
+		return;
+	}
+
+	try {
+		const body = await fs.readFile(fullPath);
+		sendText(
+			res,
+			200,
+			body,
+			contentTypes[path.extname(fullPath).toLowerCase()] ||
+				"application/octet-stream",
 		);
 	} catch {
 		sendText(res, 404, "Not found");
@@ -308,6 +356,83 @@ function formatYamlString(value) {
 	return JSON.stringify(value);
 }
 
+function getFileExtension(fileName, contentType) {
+	const ext = path.extname(String(fileName || "")).toLowerCase();
+	if (ext && ext.length <= 10) return ext;
+
+	const fallbackMap = {
+		"image/avif": ".avif",
+		"image/gif": ".gif",
+		"image/jpeg": ".jpg",
+		"image/jpg": ".jpg",
+		"image/png": ".png",
+		"image/svg+xml": ".svg",
+		"image/webp": ".webp",
+	};
+
+	return fallbackMap[String(contentType || "").toLowerCase()] || ".bin";
+}
+
+function normalizeMediaSlug(value) {
+	return String(value || "post")
+		.normalize("NFKD")
+		.toLowerCase()
+		.replace(/[\u0300-\u036f]/g, "")
+		.replace(/[^a-z0-9/_-]+/g, "-")
+		.replace(/\/-+|-+\//g, "/")
+		.replace(/^-+|-+$/g, "")
+		.replace(/^\/+|\/+$/g, "") || "post";
+}
+
+function buildMediaKey(slug, extension) {
+	const now = new Date();
+	const year = String(now.getFullYear());
+	const month = String(now.getMonth() + 1).padStart(2, "0");
+	const stamp = now
+		.toISOString()
+		.replace(/[-:TZ.]/g, "")
+		.slice(0, 14);
+	const suffix = Math.random().toString(36).slice(2, 8);
+	const safeSlug = slug.split("/").filter(Boolean).join("-");
+	return `posts/${year}/${month}/${safeSlug}-${stamp}-${suffix}${extension}`;
+}
+
+async function handleMediaUpload(req, res) {
+	const formData = await readMultipartForm(req);
+	const file = formData.get("file");
+	const slug = normalizeMediaSlug(String(formData.get("slug") || "post"));
+
+	if (!(file instanceof File)) {
+		sendError(res, 400, "No file uploaded");
+		return;
+	}
+
+	if (!file.type.startsWith("image/")) {
+		sendError(res, 400, "Only image uploads are supported");
+		return;
+	}
+
+	if (file.size <= 0 || file.size > maxUploadSize) {
+		sendError(res, 400, "Image size must be between 1 byte and 10 MB");
+		return;
+	}
+
+	const extension = getFileExtension(file.name, file.type);
+	const key = buildMediaKey(slug, extension);
+	const fullPath = path.resolve(uploadsRoot, key);
+	await fs.mkdir(path.dirname(fullPath), { recursive: true });
+	const buffer = Buffer.from(await file.arrayBuffer());
+	await fs.writeFile(fullPath, buffer);
+
+	sendJson(res, 201, {
+		key,
+		name: file.name,
+		size: file.size,
+		storage: "local",
+		url: `/uploads/${key}`,
+	});
+}
+
 async function handleCreate(req, res) {
 	const payload = await readJson(req);
 	const extension = payload.extension === ".mdx" ? ".mdx" : ".md";
@@ -382,6 +507,11 @@ async function handleRequest(req, res) {
 		return;
 	}
 
+	if (req.method === "GET" && pathname.startsWith("/uploads/")) {
+		await serveUploadedAsset(res, pathname);
+		return;
+	}
+
 	if (req.method === "GET" && pathname === "/api/health") {
 		sendJson(res, 200, { ok: true, service: "firefly-admin", postsRoot });
 		return;
@@ -397,6 +527,12 @@ async function handleRequest(req, res) {
 	if (pathname === "/api/posts" && req.method === "POST") {
 		if (!requireAuth(req, res)) return;
 		await handleCreate(req, res);
+		return;
+	}
+
+	if (pathname === "/api/media/upload" && req.method === "POST") {
+		if (!requireAuth(req, res)) return;
+		await handleMediaUpload(req, res);
 		return;
 	}
 

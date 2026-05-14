@@ -86,6 +86,11 @@
 						<label class="wide">
 							<span>封面图</span>
 							<input id="image-field" name="image" placeholder="./images/cover.avif 或 api" />
+							<div class="field-actions">
+								<input id="cover-upload-input" type="file" accept="image/*" hidden />
+								<button class="secondary" id="cover-upload-button" type="button">上传封面图</button>
+								<span class="field-help" id="cover-upload-state">支持在线上传，成功后会自动写入封面图地址。</span>
+							</div>
 						</label>
 						<label class="wide">
 							<span>摘要</span>

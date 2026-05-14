@@ -311,6 +311,19 @@ textarea:focus {
 	gap: 7px;
 }
 
+.field-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+}
+
+.field-help {
+	color: var(--muted);
+	font-size: 12px;
+	line-height: 1.5;
+}
+
 .meta-grid .wide {
 	grid-column: span 2;
 }

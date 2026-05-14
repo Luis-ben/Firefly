@@ -12,6 +12,9 @@ const els = {
 	body: document.querySelector("#body-field"),
 	category: document.querySelector("#category-field"),
 	comment: document.querySelector("#comment-field"),
+	coverUploadButton: document.querySelector("#cover-upload-button"),
+	coverUploadInput: document.querySelector("#cover-upload-input"),
+	coverUploadState: document.querySelector("#cover-upload-state"),
 	currentPath: document.querySelector("#current-path"),
 	deleteButton: document.querySelector("#delete-button"),
 	description: document.querySelector("#description-field"),
@@ -71,6 +74,7 @@ function bindEvents() {
 		state.current = null;
 		localStorage.removeItem("firefly-admin-token");
 		els.token.value = "";
+		resetUploadState();
 		updateAuthState();
 		renderPostList();
 		renderEmptyEditor();
@@ -80,6 +84,20 @@ function bindEvents() {
 	els.newPostButton.addEventListener("click", () =>
 		renderEditor(createEmptyPost()),
 	);
+	els.coverUploadButton.addEventListener("click", () => {
+		if (!state.authenticated) {
+			notify("请先完成后台认证再上传图片", true);
+			return;
+		}
+		els.coverUploadInput.click();
+	});
+	els.coverUploadInput.addEventListener("change", async (event) => {
+		const input = event.target;
+		const file = input.files?.[0];
+		if (!file) return;
+		await uploadCoverImage(file);
+		input.value = "";
+	});
 	els.saveButton.addEventListener("click", () => saveCurrent());
 	els.draftButton.addEventListener("click", () => saveCurrent(true));
 	els.publishButton.addEventListener("click", () => saveCurrent(false));
@@ -135,7 +153,9 @@ async function request(path, options = {}) {
 	};
 
 	let body = options.body;
-	if (body && typeof body !== "string") {
+	if (body instanceof FormData) {
+		delete headers["Content-Type"];
+	} else if (body && typeof body !== "string") {
 		headers["Content-Type"] = "application/json";
 		body = JSON.stringify(body);
 	}
@@ -148,6 +168,36 @@ async function request(path, options = {}) {
 	}
 
 	return data;
+}
+
+async function uploadCoverImage(file) {
+	try {
+		setBusy(true);
+		els.coverUploadState.textContent = "正在上传图片...";
+		const slugSeed =
+			els.slug.value.trim() ||
+			state.current?.id ||
+			slugify(els.title.value) ||
+			"post";
+		const formData = new FormData();
+		formData.append("file", file);
+		formData.append("slug", slugSeed);
+
+		const result = await request("/api/media/upload", {
+			body: formData,
+			method: "POST",
+		});
+
+		els.image.value = result.url;
+		state.dirty = true;
+		els.coverUploadState.textContent = `上传成功：${result.url}`;
+		notify("封面图已上传并写入字段");
+	} catch (error) {
+		els.coverUploadState.textContent = "上传失败，请稍后重试";
+		notify(error.message, true);
+	} finally {
+		setBusy(false);
+	}
 }
 
 async function loadPosts() {
@@ -249,6 +299,7 @@ function renderEditor(post) {
 	els.currentPath.textContent = post.relativePath || "新文章";
 	els.editorHeading.textContent = post.frontmatter.title || "新文章";
 	setEditorEnabled(true);
+	resetUploadState();
 	updatePreview();
 	renderPostList();
 }
@@ -261,6 +312,7 @@ function renderEmptyEditor() {
 	els.currentPath.textContent = "未选择文章";
 	els.editorHeading.textContent = "请选择或新建文章";
 	setEditorEnabled(false);
+	resetUploadState();
 	updatePreview();
 }
 
@@ -386,6 +438,11 @@ function setBusy(busy) {
 	}
 	updateAuthState();
 	setEditorEnabled(Boolean(state.current) && !busy && state.authenticated);
+}
+
+function resetUploadState() {
+	els.coverUploadState.textContent =
+		"支持在线上传，成功后会自动写入封面图地址。";
 }
 
 function isUnauthorizedError(error) {

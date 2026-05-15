@@ -72,6 +72,10 @@ const { pageSize } = Astro.props;
 					return;
 				}
 				if (typeof data?.html === "string" && data.html.trim()) {
+					if (!lastSignature && container.innerHTML.trim() === data.html.trim()) {
+						lastSignature = nextSignature;
+						return;
+					}
 					lastSignature = nextSignature;
 					container.innerHTML = data.html;
 				}

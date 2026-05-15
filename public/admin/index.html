@@ -3,6 +3,7 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="firefly-admin-version" content="2026-05-15-body-image-tools" />
 		<title>Firefly 管理后台</title>
 		<link rel="stylesheet" href="/admin/app.css" />
 	</head>
@@ -107,6 +108,11 @@
 					<section class="content-workspace">
 						<label class="content-editor">
 							<span>Markdown 正文</span>
+							<div class="field-actions">
+								<input id="body-upload-input" type="file" accept="image/*" hidden />
+								<button class="secondary" id="body-upload-button" type="button">上传正文图片并插入</button>
+								<span class="field-help" id="body-upload-state">会自动把 Markdown 图片语法插入到当前光标位置。</span>
+							</div>
 							<textarea id="body-field" name="body" spellcheck="false" placeholder="在这里写文章正文"></textarea>
 						</label>
 						<div class="preview-panel">

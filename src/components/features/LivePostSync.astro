@@ -14,6 +14,8 @@ const { siteTitle } = Astro.props;
 	}}
 >
 	(function () {
+		let lastSignature = "";
+
 		function shouldEnableLivePost() {
 			return !(
 				(location.hostname === "127.0.0.1" ||
@@ -31,6 +33,19 @@ const { siteTitle } = Astro.props;
 			if (!value) return;
 			const element = document.querySelector(`meta[name="${name}"]`);
 			if (element) element.setAttribute("content", value);
+		}
+
+		function buildSignature(data) {
+			if (!data) return "";
+			return [
+				data.id || "",
+				data.title || "",
+				data.description || "",
+				data.category || "",
+				data.published || "",
+				data.updated || "",
+				data.mainHtml || "",
+			].join("::");
 		}
 
 		async function syncPost() {
@@ -57,7 +72,17 @@ const { siteTitle } = Astro.props;
 				if (!response.ok) return;
 
 				const data = await response.json();
+				const nextSignature = buildSignature(data);
+				if (nextSignature && nextSignature === lastSignature) {
+					return;
+				}
+
 				if (typeof data?.mainHtml === "string" && data.mainHtml.trim()) {
+					if (!lastSignature && root.innerHTML.trim() === data.mainHtml.trim()) {
+						lastSignature = nextSignature;
+						return;
+					}
+					lastSignature = nextSignature;
 					root.innerHTML = data.mainHtml;
 				}
 

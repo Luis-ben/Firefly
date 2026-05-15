@@ -1,3 +1,5 @@
+const ADMIN_VERSION = "2026-05-15-body-image-tools";
+
 const state = {
 	authenticated: false,
 	current: null,
@@ -10,6 +12,9 @@ const els = {
 	authForm: document.querySelector("#auth-form"),
 	authStatus: document.querySelector("#auth-status"),
 	body: document.querySelector("#body-field"),
+	bodyUploadButton: document.querySelector("#body-upload-button"),
+	bodyUploadInput: document.querySelector("#body-upload-input"),
+	bodyUploadState: document.querySelector("#body-upload-state"),
 	category: document.querySelector("#category-field"),
 	comment: document.querySelector("#comment-field"),
 	coverUploadButton: document.querySelector("#cover-upload-button"),
@@ -96,6 +101,20 @@ function bindEvents() {
 		const file = input.files?.[0];
 		if (!file) return;
 		await uploadCoverImage(file);
+		input.value = "";
+	});
+	els.bodyUploadButton.addEventListener("click", () => {
+		if (!state.authenticated) {
+			notify("请先完成后台认证再上传图片", true);
+			return;
+		}
+		els.bodyUploadInput.click();
+	});
+	els.bodyUploadInput.addEventListener("change", async (event) => {
+		const input = event.target;
+		const file = input.files?.[0];
+		if (!file) return;
+		await uploadBodyImage(file);
 		input.value = "";
 	});
 	els.saveButton.addEventListener("click", () => saveCurrent());
@@ -194,6 +213,40 @@ async function uploadCoverImage(file) {
 		notify("封面图已上传并写入字段");
 	} catch (error) {
 		els.coverUploadState.textContent = "上传失败，请稍后重试";
+		notify(error.message, true);
+	} finally {
+		setBusy(false);
+	}
+}
+
+async function uploadBodyImage(file) {
+	try {
+		setBusy(true);
+		els.bodyUploadState.textContent = "正在上传正文图片...";
+		const slugSeed =
+			els.slug.value.trim() ||
+			state.current?.id ||
+			slugify(els.title.value) ||
+			"post";
+		const formData = new FormData();
+		formData.append("file", file);
+		formData.append("slug", slugSeed);
+
+		const result = await request("/api/media/upload", {
+			body: formData,
+			method: "POST",
+		});
+
+		insertMarkdownAtCursor(
+			els.body,
+			`\n\n![${escapeMarkdownText(removeFileExtension(file.name))}](${result.url})\n\n`,
+		);
+		state.dirty = true;
+		updatePreview();
+		els.bodyUploadState.textContent = `正文图片已插入：${result.url}`;
+		notify("正文图片已上传并插入 Markdown");
+	} catch (error) {
+		els.bodyUploadState.textContent = "正文图片上传失败，请稍后重试";
 		notify(error.message, true);
 	} finally {
 		setBusy(false);
@@ -443,6 +496,8 @@ function setBusy(busy) {
 function resetUploadState() {
 	els.coverUploadState.textContent =
 		"支持在线上传，成功后会自动写入封面图地址。";
+	els.bodyUploadState.textContent =
+		"会自动把 Markdown 图片语法插入到当前光标位置。";
 }
 
 function isUnauthorizedError(error) {
@@ -513,6 +568,29 @@ function compactTimestamp() {
 function formatDate(value) {
 	if (!value) return "";
 	return String(value).slice(0, 10);
+}
+
+function removeFileExtension(value) {
+	return String(value || "").replace(/\.[^.]+$/, "");
+}
+
+function escapeMarkdownText(value) {
+	return String(value || "")
+		.replaceAll("[", "")
+		.replaceAll("]", "")
+		.replaceAll("\n", " ")
+		.trim();
+}
+
+function insertMarkdownAtCursor(textarea, markdown) {
+	const start = textarea.selectionStart ?? textarea.value.length;
+	const end = textarea.selectionEnd ?? textarea.value.length;
+	const before = textarea.value.slice(0, start);
+	const after = textarea.value.slice(end);
+	textarea.value = `${before}${markdown}${after}`;
+	const cursor = before.length + markdown.length;
+	textarea.focus();
+	textarea.setSelectionRange(cursor, cursor);
 }
 
 function escapeHtml(value) {

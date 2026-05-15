@@ -367,6 +367,10 @@ textarea:focus {
 	box-shadow: var(--shadow);
 }
 
+.content-editor .field-actions {
+	margin-bottom: 4px;
+}
+
 #body-field {
 	min-height: 100%;
 	resize: vertical;

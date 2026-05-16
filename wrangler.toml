@@ -1,4 +1,4 @@
-name = "feirefly"
+name = "firefly"
 main = "worker/index.js"
 compatibility_date = "2026-05-08"
 account_id = "95ddfac0682f045a62fa9f0d671d1fcb"

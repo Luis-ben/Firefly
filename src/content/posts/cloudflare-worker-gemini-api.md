@@ -2,7 +2,7 @@
 title: "使用 Cloudflare Worker 完美反代 Gemini API：彻底解决地域限制"
 published: 2026-05-16
 description: "关于在国内不需要魔法就可以调动api"
-image: "/media/posts/2026/09/cloudflare-worker-gemini-api-20260922111803-7r4q0s.png"
+image: ''
 tags: [cloudflare]
 category: "反代理"
 draft: false

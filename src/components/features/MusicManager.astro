@@ -114,7 +114,8 @@ const managerConfigStr = JSON.stringify({
         currentLrcIndex: -1,
         initialized: false,
         initializing: false,
-        error: null
+        error: null,
+        failedTrackIndexes: {}
     };
 
     // Map config playMode string to number
@@ -128,6 +129,16 @@ const managerConfigStr = JSON.stringify({
     }
 
     // ── Meting fetch ─────────────────────────────────────────
+    async function fetchWithTimeout(fetchUrl, timeoutMs) {
+        var controller = new AbortController();
+        var timeoutId = setTimeout(function () { controller.abort(); }, timeoutMs);
+        try {
+            return await fetch(fetchUrl, { signal: controller.signal });
+        } finally {
+            clearTimeout(timeoutId);
+        }
+    }
+
     async function fetchMetingData() {
         if (!config.meting) return;
         var m = config.meting;
@@ -144,12 +155,16 @@ const managerConfigStr = JSON.stringify({
                     .replace(':r', Math.random());
                 if (m.auth) fetchUrl += '&auth=' + m.auth;
 
-                var res = await fetch(fetchUrl);
+                // A stalled provider should not block the whole player.
+                var res = await fetchWithTimeout(fetchUrl, 8000);
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 var data = await res.json();
+                var tracks = Array.isArray(data)
+                    ? data.filter(function (item) { return item && item.url; })
+                    : [];
 
-                if (Array.isArray(data) && data.length > 0) {
-                    state.playlist = data.map(function (item) {
+                if (tracks.length > 0) {
+                    state.playlist = tracks.map(function (item) {
                         return {
                             name: item.title || item.name || 'Unknown',
                             artist: item.author || item.artist || 'Unknown',
@@ -225,6 +240,15 @@ const managerConfigStr = JSON.stringify({
     }
 
     // ── Playback controls ────────────────────────────────────
+    function findNextTrackIndex(startIndex, direction) {
+        if (state.playlist.length <= 1) return -1;
+        for (var step = 1; step <= state.playlist.length; step++) {
+            var index = (startIndex + direction * step + state.playlist.length * 2) % state.playlist.length;
+            if (!state.failedTrackIndexes[index]) return index;
+        }
+        return -1;
+    }
+
     function togglePlay() {
         if (audio.paused) {
             audio.play().then(function () {
@@ -239,6 +263,7 @@ const managerConfigStr = JSON.stringify({
     }
 
     function playNext(auto) {
+        if (state.playlist.length === 0) return;
         if (state.playMode === 1 && auto) {
             audio.currentTime = 0;
             audio.play();
@@ -247,18 +272,35 @@ const managerConfigStr = JSON.stringify({
         var nextIndex;
         if (state.playMode === 2) {
             nextIndex = Math.floor(Math.random() * state.playlist.length);
+            if (state.failedTrackIndexes[nextIndex]) {
+                nextIndex = findNextTrackIndex(state.currentIndex, 1);
+            }
         } else {
-            nextIndex = (state.currentIndex + 1) % state.playlist.length;
+            nextIndex = findNextTrackIndex(state.currentIndex, 1);
+        }
+        if (nextIndex < 0) {
+            state.error = 'Audio playback error';
+            emit('fm:error', { message: state.error });
+            return;
         }
         loadTrack(nextIndex, true);
     }
 
     function playPrev() {
+        if (state.playlist.length === 0) return;
         var prevIndex;
         if (state.playMode === 2) {
             prevIndex = Math.floor(Math.random() * state.playlist.length);
+            if (state.failedTrackIndexes[prevIndex]) {
+                prevIndex = findNextTrackIndex(state.currentIndex, -1);
+            }
         } else {
-            prevIndex = (state.currentIndex - 1 + state.playlist.length) % state.playlist.length;
+            prevIndex = findNextTrackIndex(state.currentIndex, -1);
+        }
+        if (prevIndex < 0) {
+            state.error = 'Audio playback error';
+            emit('fm:error', { message: state.error });
+            return;
         }
         loadTrack(prevIndex, true);
     }
@@ -340,6 +382,15 @@ const managerConfigStr = JSON.stringify({
     });
 
     audio.addEventListener('error', function () {
+        var failedIndex = state.currentIndex;
+        state.failedTrackIndexes[failedIndex] = true;
+        var nextIndex = findNextTrackIndex(failedIndex, 1);
+        if (nextIndex >= 0) {
+            var shouldResume = state.isPlaying;
+            state.error = null;
+            loadTrack(nextIndex, shouldResume);
+            return;
+        }
         state.error = 'Audio playback error';
         emit('fm:error', { message: state.error });
     });

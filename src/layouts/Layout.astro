@@ -95,7 +95,7 @@ const siteLang = lang.replace("_", "-");
 ---
 
 <!doctype html>
-<html lang={siteLang} class="bg-(--page-bg) text-[14px] md:text-[16px]" data-wallpaper-mode={backgroundWallpaper.mode}>
+<html lang={siteLang} class="bg-(--page-bg) text-[14px] md:text-[16px]" data-wallpaper-mode={backgroundWallpaper.mode} data-is-home={isHomePageCheck ? "true" : "false"}>
   <head>
     <meta charset="UTF-8" />
     {siteConfig.analytics?.googleAnalyticsId && (
@@ -566,6 +566,8 @@ const siteLang = lang.replace("_", "-");
       {
         "lg:is-home": isHomePageCheck,
         "enable-banner": enableBanner,
+        "no-banner-layout": !enableBanner,
+        "wallpaper-transparent": backgroundWallpaper.mode !== "none",
         "sticky-navbar": siteConfig.navbar.stickyNavbar ?? false,
         "enable-card-border": siteConfig.card?.border,
         "card-follow-theme-hue": siteConfig.card?.followTheme,
@@ -1009,6 +1011,8 @@ function disableAnimation() {
       // change banner height immediately when a link is clicked
       const bodyElement = document.querySelector("body");
       const isHomePage = pathsEqual(visit.to.url, url("/"));
+
+      document.documentElement.setAttribute("data-is-home", String(isHomePage));
 
       if (isHomePage) {
         bodyElement!.classList.add("lg:is-home");

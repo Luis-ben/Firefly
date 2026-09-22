@@ -153,7 +153,7 @@ const relatedPosts = await getRelatedPosts(entry, 5);
     type="application/ld+json"
     set:html={JSON.stringify(jsonLd)}
   />
-  <div id="live-post-main">
+  <div id="live-post-main" data-live-sync="pending">
   <div
     class="flex w-full rounded-(--radius-large) overflow-hidden relative mb-4"
   >

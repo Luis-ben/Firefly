@@ -14,14 +14,46 @@ const { pageSize } = Astro.props;
 	}}
 >
 	(function () {
+		const previousController = window.__fireflyLiveFeedController;
+		if (previousController?.destroy) previousController.destroy();
+
 		let lastSignature = "";
+		let failureCount = 0;
+		let activePath = "";
+		let syncInFlight = null;
+		let activeRequestController = null;
+		let destroyed = false;
+		let hasCompletedInitialSync = false;
+
+		function normalizeHtml(html) {
+			const template = document.createElement("template");
+			template.innerHTML = String(html || "").trim();
+			return template.innerHTML.trim();
+		}
+
+		function setSyncState(container, state) {
+			if (container) container.setAttribute("data-live-sync", state);
+		}
+
+		function recordFailure(message) {
+			failureCount = Math.min(failureCount + 1, 4);
+			if (failureCount === 1) {
+				console.warn(message);
+			}
+		}
 
 		function shouldEnableLiveFeed() {
-			return !(
-				(location.hostname === "127.0.0.1" ||
-					location.hostname === "localhost") &&
-				location.port === "4321"
-			);
+			const localHosts = new Set(["localhost", "127.0.0.1", "[::1]"]);
+			// Astro dev/preview servers do not expose the Worker live API. Keep
+			// the feed enabled for local Wrangler ports so the Worker can still
+			// be tested end to end.
+			if (
+				localHosts.has(location.hostname) &&
+				!new Set(["8787", "8788"]).has(location.port)
+			) {
+				return false;
+			}
+			return true;
 		}
 
 		function resolveCurrentPage() {
@@ -42,66 +74,156 @@ const { pageSize } = Astro.props;
 						item.title || "",
 						item.description || "",
 						item.category || "",
+						item.image || "",
+						Array.isArray(item.tags) ? item.tags.join(",") : "",
 						item.pinned ? "1" : "0",
 					].join("::"),
 				)
 				.join("|");
 		}
 
-		async function syncFeed() {
-			if (!shouldEnableLiveFeed()) return;
-			const currentPage = resolveCurrentPage();
-			if (!currentPage) return;
+		function syncFeed() {
+			if (destroyed) return Promise.resolve();
+			if (syncInFlight) return syncInFlight;
 
-			const container = document.getElementById("post-list-container");
-			if (!container) return;
+			syncInFlight = (async () => {
+				if (destroyed || !shouldEnableLiveFeed()) return;
+				const currentPage = resolveCurrentPage();
+				if (!currentPage) return;
 
-			try {
-				const response = await fetch(
-					`/api/live/posts?page=${currentPage}&pageSize=${pageSize}`,
-					{
-						headers: {
-							Accept: "application/json",
-						},
-					},
-				);
-				if (!response.ok) return;
-				const data = await response.json();
-				const nextSignature = buildSignature(data?.items);
-				if (nextSignature && nextSignature === lastSignature) {
-					return;
-				}
-				if (typeof data?.html === "string" && data.html.trim()) {
-					if (!lastSignature && container.innerHTML.trim() === data.html.trim()) {
-						lastSignature = nextSignature;
+				const container = document.getElementById("post-list-container");
+				if (!container) return;
+				if (!hasCompletedInitialSync) setSyncState(container, "pending");
+
+				try {
+					const controller = new AbortController();
+					activeRequestController = controller;
+					const timeoutId = window.setTimeout(() => controller.abort(), 5000);
+					let response;
+					try {
+						response = await fetch(
+							`/api/live/posts?page=${currentPage}&pageSize=${pageSize}`,
+							{
+								headers: {
+								Accept: "application/json",
+								},
+								cache: "no-store",
+								signal: controller.signal,
+							},
+						);
+					} finally {
+						window.clearTimeout(timeoutId);
+						if (activeRequestController === controller) {
+							activeRequestController = null;
+						}
+					}
+					if (destroyed) return;
+					if (!response.ok) {
+						recordFailure(`Live feed temporarily unavailable (${response.status})`);
+						setSyncState(container, "ready");
+						hasCompletedInitialSync = true;
 						return;
 					}
-					lastSignature = nextSignature;
-					container.innerHTML = data.html;
+					failureCount = 0;
+					const data = await response.json();
+					const nextSignature = buildSignature(data?.items);
+					if (nextSignature && nextSignature === lastSignature) {
+						setSyncState(container, "ready");
+						hasCompletedInitialSync = true;
+						return;
+					}
+					if (typeof data?.html === "string" && data.html.trim()) {
+						if (
+							!lastSignature &&
+							normalizeHtml(container.innerHTML) ===
+								normalizeHtml(data.html)
+						) {
+							lastSignature = nextSignature;
+							setSyncState(container, "ready");
+							hasCompletedInitialSync = true;
+							return;
+						}
+						lastSignature = nextSignature;
+						container.innerHTML = data.html;
+					}
+					setSyncState(container, "ready");
+					hasCompletedInitialSync = true;
+				} catch (error) {
+					if (destroyed) return;
+					recordFailure("Live feed sync is temporarily unavailable");
+					setSyncState(document.getElementById("post-list-container"), "ready");
+					hasCompletedInitialSync = true;
 				}
-			} catch (error) {
-				console.warn("Live feed sync failed:", error);
+			})().finally(() => {
+				syncInFlight = null;
+			});
+
+			return syncInFlight;
+		}
+
+		function scheduleNextPoll() {
+			if (destroyed) return;
+			if (window.__fireflyLiveFeedTimer) {
+				window.clearTimeout(window.__fireflyLiveFeedTimer);
 			}
+			const delay = Math.min(pollMs * 2 ** failureCount, 120000);
+			window.__fireflyLiveFeedTimer = window.setTimeout(async () => {
+				if (destroyed) return;
+				await syncFeed();
+				if (!destroyed) scheduleNextPoll();
+			}, delay);
 		}
 
 		function boot() {
-			if (!shouldEnableLiveFeed()) return;
-			if (window.__fireflyLiveFeedTimer) {
-				window.clearInterval(window.__fireflyLiveFeedTimer);
+			const container = document.getElementById("post-list-container");
+			if (destroyed) return;
+			if (!shouldEnableLiveFeed()) {
+				setSyncState(container, "ready");
+				hasCompletedInitialSync = true;
+				return;
 			}
-			syncFeed();
-			window.__fireflyLiveFeedTimer = window.setInterval(syncFeed, pollMs);
+			const path = location.pathname;
+			if (activePath === path) return;
+			activePath = path;
+			lastSignature = "";
+			failureCount = 0;
+			hasCompletedInitialSync = false;
+			if (window.__fireflyLiveFeedTimer) {
+				window.clearTimeout(window.__fireflyLiveFeedTimer);
+			}
+			syncFeed().finally(() => {
+				if (!destroyed && activePath === path) scheduleNextPoll();
+			});
 		}
 
+		function onPageLoad() {
+			boot();
+		}
+
+		function onContentReplaced() {
+			window.setTimeout(boot, 50);
+		}
+
+		window.__fireflyLiveFeedController = {
+			destroy() {
+				destroyed = true;
+				if (window.__fireflyLiveFeedTimer) {
+					window.clearTimeout(window.__fireflyLiveFeedTimer);
+				}
+				activeRequestController?.abort();
+				document.removeEventListener("DOMContentLoaded", onPageLoad);
+				document.removeEventListener("astro:page-load", onPageLoad);
+				document.removeEventListener("swup:contentReplaced", onContentReplaced);
+			},
+		};
+
 		if (document.readyState === "loading") {
-			document.addEventListener("DOMContentLoaded", boot, { once: true });
+			document.addEventListener("DOMContentLoaded", onPageLoad, { once: true });
 		} else {
 			boot();
 		}
 
-		document.addEventListener("astro:page-load", boot);
-		document.addEventListener("swup:contentReplaced", () => {
-			window.setTimeout(boot, 50);
-		});
+		document.addEventListener("astro:page-load", onPageLoad);
+		document.addEventListener("swup:contentReplaced", onContentReplaced);
 	})();
 </script>

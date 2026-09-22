@@ -1008,7 +1008,7 @@ function renderFeedHtml(env, posts) {
 						hasCover
 							? `<a href="/posts/${encodeURI(post.id)}/" aria-label="${escapeHtml(
 									post.frontmatter.title,
-								)}" class="post-card-image group w-full md:w-(--coverWidth) aspect-2/1 md:aspect-auto relative md:absolute md:top-4 md:bottom-4 md:right-4 rounded-(--radius-large) md:rounded-xl overflow-hidden">
+								)}" class="post-card-image group w-full md:w-(--coverWidth) aspect-[16/9] md:aspect-[16/9] relative md:absolute md:top-1/2 md:-translate-y-1/2 md:right-4 md:h-auto rounded-(--radius-large) md:rounded-xl overflow-hidden">
 									<div class="absolute pointer-events-none z-10 w-full h-full group-hover:bg-black/30 group-active:bg-black/50 transition"></div>
 									<img src="${escapeHtml(cover)}" alt="${escapeHtml(
 										post.frontmatter.title,

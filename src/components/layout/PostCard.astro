@@ -162,8 +162,8 @@ const descriptionText = description || remarkPluginFrontmatter.excerpt || "";
           "post-card-image",
           "group",
           "w-full md:w-(--coverWidth)",
-          "aspect-2/1 md:aspect-auto",
-          "relative md:absolute md:top-4 md:bottom-4 md:right-4",
+          "aspect-[16/9] md:aspect-[16/9]",
+          "relative md:absolute md:top-1/2 md:-translate-y-1/2 md:right-4 md:h-auto",
           "rounded-(--radius-large) md:rounded-xl overflow-hidden",
         ]}
       >
@@ -231,10 +231,12 @@ const descriptionText = description || remarkPluginFrontmatter.excerpt || "";
   :global(.list-mode) .has-cover .post-card-image {
     position: absolute !important;
     top: 0.5rem !important;
-    bottom: 0.5rem !important;
+    bottom: auto !important;
     right: 0.5rem !important;
     width: 9rem !important;
-    aspect-ratio: auto !important;
+    aspect-ratio: 16 / 9 !important;
+    height: auto !important;
+    transform: translateY(0) !important;
     border-radius: 0.75rem !important;
   }
 
@@ -273,16 +275,23 @@ const descriptionText = description || remarkPluginFrontmatter.excerpt || "";
       flex-direction: row !important;
     }
 
+    :global(.list-mode) .post-card-wrapper.has-cover {
+      min-height: 12rem !important;
+    }
+
     :global(.list-mode) .has-cover .post-card-content {
       width: calc(100% - var(--coverWidth) - 1.5rem) !important;
       padding: 1.75rem 0.5rem 1.75rem 2.25rem !important;
     }
 
     :global(.list-mode) .has-cover .post-card-image {
-      top: 1rem !important;
-      bottom: 1rem !important;
+      top: 50% !important;
+      bottom: auto !important;
       right: 1rem !important;
       width: var(--coverWidth) !important;
+      height: auto !important;
+      aspect-ratio: 16 / 9 !important;
+      transform: translateY(-50%) !important;
       border-radius: 0.75rem !important;
     }
 
@@ -340,7 +349,9 @@ const descriptionText = description || remarkPluginFrontmatter.excerpt || "";
     margin: 0 !important;
     border-radius: var(--radius-large) var(--radius-large) 0 0 !important;
     max-height: none !important;
-    aspect-ratio: 2/1 !important;
+    aspect-ratio: 16 / 9 !important;
+    height: auto !important;
+    transform: none !important;
   }
 
   :global(.grid-mode) .description {

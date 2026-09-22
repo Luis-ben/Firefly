@@ -15,6 +15,15 @@ const { siteTitle } = Astro.props;
 >
 	(function () {
 		let lastSignature = "";
+		let activeRequestController = null;
+		let activeRequestId = 0;
+		let activeSlug = "";
+		let destroyed = false;
+		let hasCompletedInitialSync = false;
+
+		function setSyncState(root, state) {
+			if (root) root.setAttribute("data-live-sync", state);
+		}
 
 		function shouldEnableLivePost() {
 			return !(
@@ -44,47 +53,80 @@ const { siteTitle } = Astro.props;
 				data.category || "",
 				data.published || "",
 				data.updated || "",
+				data.image || "",
+				Array.isArray(data.tags) ? data.tags.join(",") : "",
 				data.mainHtml || "",
 			].join("::");
 		}
 
 		async function syncPost() {
-			if (!shouldEnableLivePost()) return;
-			const slug = getCurrentSlug();
-			if (!slug) return;
-
 			const root = document.getElementById("live-post-main");
+			if (!shouldEnableLivePost()) {
+				setSyncState(root, "ready");
+				hasCompletedInitialSync = true;
+				return;
+			}
+			const slug = getCurrentSlug();
+			if (!slug) {
+				setSyncState(root, "ready");
+				hasCompletedInitialSync = true;
+				return;
+			}
+
 			if (!root) return;
+			if (!hasCompletedInitialSync) setSyncState(root, "pending");
+			const requestId = ++activeRequestId;
 
 			try {
+				const controller = new AbortController();
+				activeRequestController = controller;
+				const timeoutId = window.setTimeout(() => controller.abort(), 5000);
 				const response = await fetch(`/api/live/posts/${encodeURIComponent(slug)}`, {
 					headers: {
 						Accept: "application/json",
 					},
+					cache: "no-store",
+					signal: controller.signal,
 				});
+				window.clearTimeout(timeoutId);
+				if (activeRequestController === controller) activeRequestController = null;
+				if (destroyed || requestId !== activeRequestId) return;
 
 				if (response.status === 404) {
 					root.innerHTML =
 						'<div class="card-base p-8 text-center text-75">文章不存在或尚未同步到实时内容层。</div>';
+					setSyncState(root, "ready");
+					hasCompletedInitialSync = true;
 					return;
 				}
 
-				if (!response.ok) return;
+				if (!response.ok) {
+					setSyncState(root, "ready");
+					hasCompletedInitialSync = true;
+					return;
+				}
 
 				const data = await response.json();
+				if (destroyed || requestId !== activeRequestId) return;
 				const nextSignature = buildSignature(data);
 				if (nextSignature && nextSignature === lastSignature) {
+					setSyncState(root, "ready");
+					hasCompletedInitialSync = true;
 					return;
 				}
 
 				if (typeof data?.mainHtml === "string" && data.mainHtml.trim()) {
 					if (!lastSignature && root.innerHTML.trim() === data.mainHtml.trim()) {
 						lastSignature = nextSignature;
+						setSyncState(root, "ready");
+						hasCompletedInitialSync = true;
 						return;
 					}
 					lastSignature = nextSignature;
 					root.innerHTML = data.mainHtml;
 				}
+				setSyncState(root, "ready");
+				hasCompletedInitialSync = true;
 
 				if (data?.title) {
 					document.title = `${data.title} - ${siteTitle}`;
@@ -108,18 +150,40 @@ const { siteTitle } = Astro.props;
 					);
 				}
 			} catch (error) {
+				if (destroyed || requestId !== activeRequestId) return;
+				setSyncState(root, "ready");
+				hasCompletedInitialSync = true;
 				console.warn("Live post sync failed:", error);
 			}
 		}
 
 		function boot() {
-			if (!shouldEnableLivePost()) return;
+			if (destroyed) return;
+			const slug = getCurrentSlug();
+			if (activeSlug !== slug) {
+				activeSlug = slug;
+				lastSignature = "";
+				hasCompletedInitialSync = false;
+				activeRequestId += 1;
+				activeRequestController?.abort();
+			}
 			if (window.__fireflyLivePostTimer) {
 				window.clearInterval(window.__fireflyLivePostTimer);
 			}
 			syncPost();
 			window.__fireflyLivePostTimer = window.setInterval(syncPost, pollMs);
 		}
+
+		window.__fireflyLivePostController?.destroy?.();
+		window.__fireflyLivePostController = {
+			destroy() {
+				destroyed = true;
+				if (window.__fireflyLivePostTimer) {
+					window.clearInterval(window.__fireflyLivePostTimer);
+				}
+				activeRequestController?.abort();
+			},
+		};
 
 		if (document.readyState === "loading") {
 			document.addEventListener("DOMContentLoaded", boot, { once: true });

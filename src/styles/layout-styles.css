@@ -5,6 +5,24 @@ html[data-banner-title-enabled="false"] .banner-home-text-overlay {
     display: none !important;
 }
 
+/* Resolve the wallpaper title before the first paint. The client can restore
+ * its wallpaper choice from localStorage, so waiting for the next animation
+ * frame here would briefly reveal a title that should be hidden. */
+html[data-wallpaper-mode="overlay"] .banner-home-text-overlay,
+html[data-wallpaper-mode="none"] .banner-home-text-overlay,
+html[data-is-home="false"] .banner-home-text-overlay {
+    display: none !important;
+}
+
+html[data-wallpaper-mode="banner"][data-is-home="true"] .banner-home-text-overlay,
+html[data-wallpaper-mode="fullscreen"][data-is-home="true"] .banner-home-text-overlay {
+    display: flex !important;
+}
+
+html[data-banner-title-enabled="false"] .banner-home-text-overlay {
+    display: none !important;
+}
+
 /* 注意：不使用 data-banner-title-enabled="true" 强制显示，
    因为横幅标题只应在首页显示，由页面本身的 hidden 类控制 */
 
@@ -726,10 +744,49 @@ body.sticky-navbar #main-grid {
     scroll-margin-top: 5.5rem;
 }
 
-/* Fullscreen 模式下主内容上移，credit 自然显示在壁纸上（与横幅模式一致） */
+/* Keep fullscreen content below the first viewport from the first paint. */
 html[data-wallpaper-mode="fullscreen"] .w-full.z-30.pointer-events-none {
-    top: auto !important;
+    position: absolute !important;
+    top: 100vh !important;
     margin-top: 0.5rem !important;
+}
+
+/* The edge API is authoritative for online edits. Do not show an old static
+ * cover while its live state is still being confirmed; preserve its space so
+ * the card itself does not jump. A failed request restores static content. */
+#post-list-container[data-live-sync="pending"] .post-card-image,
+#live-post-main[data-live-sync="pending"] #post-cover,
+#live-post-main[data-live-sync="pending"] .banner-container {
+    visibility: hidden !important;
+}
+
+/* Static cards and Worker-rendered cards share these selectors. */
+#post-list-container.list-mode .post-card-wrapper.has-cover {
+    min-height: 12rem;
+}
+
+#post-list-container.list-mode .post-card-image,
+#post-list-container.grid-mode .post-card-image {
+    aspect-ratio: 16 / 9 !important;
+    height: auto !important;
+}
+
+/* A stored overlay/none preference must override the server-rendered
+ * fullscreen class before the client mode script runs. */
+html[data-wallpaper-mode="overlay"] #wallpaper-wrapper .banner-home-text-overlay,
+html[data-wallpaper-mode="none"] #wallpaper-wrapper .banner-home-text-overlay,
+html[data-is-home="false"] #wallpaper-wrapper .banner-home-text-overlay {
+    display: none !important;
+}
+
+@media (min-width: 768px) {
+    #post-list-container.list-mode .has-cover .post-card-image {
+        top: 50% !important;
+        bottom: auto !important;
+        right: 1rem !important;
+        width: var(--coverWidth, 30%) !important;
+        transform: translateY(-50%) !important;
+    }
 }
 
 /* Fullscreen 模式下移动端非首页隐藏壁纸（与横幅模式一致） */

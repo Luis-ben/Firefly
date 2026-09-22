@@ -33,6 +33,7 @@ const initialLayoutClass =
   data-mobile-default-layout={mobileDefaultLayout}
   data-masonry-enabled={masonryEnabled}
   data-column-width={columnWidth}
+  data-live-sync="pending"
   style={`--post-card-min-width: ${columnWidth}px;`}
 >
   {
@@ -383,7 +384,8 @@ const initialLayoutClass =
     right: auto !important;
     bottom: auto !important;
     border-radius: var(--radius-large) var(--radius-large) 0 0 !important;
-    /*aspect-ratio: 16/9 !important;*/
+    aspect-ratio: 16 / 9 !important;
+    height: auto !important;
   }
 
   #post-list-container.grid-mode :global(.post-card-content) {

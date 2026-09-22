@@ -360,6 +360,62 @@ export function applyWallpaperModeToDocument(mode: WALLPAPER_MODE) {
 // 确保壁纸状态正确
 function ensureWallpaperState(mode: WALLPAPER_MODE) {
 	const body = document.body;
+	const wallpaperWrapper = document.getElementById("wallpaper-wrapper");
+	const mainContent = document.querySelector(
+		".w-full.z-30.pointer-events-none",
+	) as HTMLElement | null;
+
+	// The server already renders the configured wallpaper state. Avoid
+	// rewriting the same classes and positions during first boot.
+	const hasStableInitialState = (() => {
+		if (!wallpaperWrapper || !mainContent) return false;
+
+		const hasTransparentContent =
+			body.classList.contains("wallpaper-transparent") &&
+			mainContent.classList.contains("wallpaper-transparent");
+		const hasCompactLayout = mainContent.classList.contains("no-banner-layout");
+
+		switch (mode) {
+			case WALLPAPER_BANNER:
+				return (
+					body.classList.contains("enable-banner") &&
+					!body.classList.contains("no-banner-layout") &&
+					!wallpaperWrapper.classList.contains("wallpaper-overlay") &&
+					!wallpaperWrapper.classList.contains("wallpaper-fullscreen") &&
+					!hasCompactLayout &&
+					hasTransparentContent
+				);
+			case WALLPAPER_FULLSCREEN:
+				return (
+					body.classList.contains("no-banner-layout") &&
+					hasTransparentContent &&
+					wallpaperWrapper.classList.contains("wallpaper-fullscreen") &&
+					hasCompactLayout
+				);
+			case WALLPAPER_OVERLAY:
+				return (
+					body.classList.contains("no-banner-layout") &&
+					hasTransparentContent &&
+					wallpaperWrapper.classList.contains("wallpaper-overlay") &&
+					hasCompactLayout
+				);
+			case WALLPAPER_NONE:
+				return (
+					body.classList.contains("no-banner-layout") &&
+					!body.classList.contains("wallpaper-transparent") &&
+					!mainContent.classList.contains("wallpaper-transparent") &&
+					hasCompactLayout &&
+					getComputedStyle(wallpaperWrapper).display === "none"
+				);
+			default:
+				return false;
+		}
+	})();
+
+	if (hasStableInitialState) {
+		updateNavbarTransparency(mode);
+		return;
+	}
 
 	// 移除所有壁纸相关的CSS类
 	body.classList.remove(

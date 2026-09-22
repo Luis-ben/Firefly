@@ -762,13 +762,28 @@ html[data-wallpaper-mode="fullscreen"] .w-full.z-30.pointer-events-none {
 
 /* Static cards and Worker-rendered cards share these selectors. */
 #post-list-container.list-mode .post-card-wrapper.has-cover {
-    min-height: 12rem;
+    min-height: 0 !important;
+    flex-direction: column !important;
+}
+
+#post-list-container.list-mode .has-cover .post-card-content {
+    width: 100% !important;
 }
 
 #post-list-container.list-mode .post-card-image,
 #post-list-container.grid-mode .post-card-image {
     aspect-ratio: 16 / 9 !important;
     height: auto !important;
+}
+
+#post-list-container.list-mode .has-cover .post-card-image {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: 100% !important;
+    transform: none !important;
+    border-radius: 0 0 var(--radius-large) var(--radius-large) !important;
 }
 
 /* A stored overlay/none preference must override the server-rendered
@@ -781,11 +796,12 @@ html[data-is-home="false"] #wallpaper-wrapper .banner-home-text-overlay {
 
 @media (min-width: 768px) {
     #post-list-container.list-mode .has-cover .post-card-image {
-        top: 50% !important;
+        position: relative !important;
+        top: auto !important;
         bottom: auto !important;
-        right: 1rem !important;
-        width: var(--coverWidth, 30%) !important;
-        transform: translateY(-50%) !important;
+        right: auto !important;
+        width: 100% !important;
+        transform: none !important;
     }
 }
 

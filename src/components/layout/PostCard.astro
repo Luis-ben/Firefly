@@ -220,24 +220,24 @@ const descriptionText = description || remarkPluginFrontmatter.excerpt || "";
   /* === List Mode Mobile Styles === */
   /* 移动端列表模式：封面在右侧，内容缩小 */
   :global(.list-mode) .post-card-wrapper {
-    flex-direction: row !important;
+    flex-direction: column !important;
   }
 
   :global(.list-mode) .has-cover .post-card-content {
-    width: calc(100% - 9rem - 0.75rem) !important;
-    padding: 0.75rem 0.5rem 0.75rem 0.75rem !important;
+    width: 100% !important;
+    padding: 0.75rem !important;
   }
 
   :global(.list-mode) .has-cover .post-card-image {
-    position: absolute !important;
-    top: 0.5rem !important;
+    position: relative !important;
+    top: auto !important;
     bottom: auto !important;
-    right: 0.5rem !important;
-    width: 9rem !important;
+    right: auto !important;
+    width: 100% !important;
     aspect-ratio: 16 / 9 !important;
     height: auto !important;
-    transform: translateY(0) !important;
-    border-radius: 0.75rem !important;
+    transform: none !important;
+    border-radius: 0 0 var(--radius-large) var(--radius-large) !important;
   }
 
   :global(.list-mode) .post-card-title {
@@ -272,27 +272,28 @@ const descriptionText = description || remarkPluginFrontmatter.excerpt || "";
   /* === Desktop List Mode overrides === */
   @media (min-width: 768px) {
     :global(.list-mode) .post-card-wrapper {
-      flex-direction: row !important;
+      flex-direction: column !important;
     }
 
     :global(.list-mode) .post-card-wrapper.has-cover {
-      min-height: 12rem !important;
+      min-height: 0 !important;
     }
 
     :global(.list-mode) .has-cover .post-card-content {
-      width: calc(100% - var(--coverWidth) - 1.5rem) !important;
-      padding: 1.75rem 0.5rem 1.75rem 2.25rem !important;
+      width: 100% !important;
+      padding: 1.75rem 2.25rem !important;
     }
 
     :global(.list-mode) .has-cover .post-card-image {
-      top: 50% !important;
+      position: relative !important;
+      top: auto !important;
       bottom: auto !important;
-      right: 1rem !important;
-      width: var(--coverWidth) !important;
+      right: auto !important;
+      width: 100% !important;
       height: auto !important;
       aspect-ratio: 16 / 9 !important;
-      transform: translateY(-50%) !important;
-      border-radius: 0.75rem !important;
+      transform: none !important;
+      border-radius: 0 0 var(--radius-large) var(--radius-large) !important;
     }
 
     :global(.list-mode) .post-card-title {

@@ -220,24 +220,24 @@ const descriptionText = description || remarkPluginFrontmatter.excerpt || "";
   /* === List Mode Mobile Styles === */
   /* 移动端列表模式：封面在右侧，内容缩小 */
   :global(.list-mode) .post-card-wrapper {
-    flex-direction: column !important;
+    flex-direction: row !important;
   }
 
   :global(.list-mode) .has-cover .post-card-content {
-    width: 100% !important;
-    padding: 0.75rem !important;
+    width: calc(100% - 9rem - 0.75rem) !important;
+    padding: 0.75rem 0.5rem 0.75rem 0.75rem !important;
   }
 
   :global(.list-mode) .has-cover .post-card-image {
-    position: relative !important;
-    top: auto !important;
+    position: absolute !important;
+    top: 0.5rem !important;
     bottom: auto !important;
-    right: auto !important;
-    width: 100% !important;
+    right: 0.5rem !important;
+    width: 9rem !important;
     aspect-ratio: 16 / 9 !important;
     height: auto !important;
-    transform: none !important;
-    border-radius: 0 0 var(--radius-large) var(--radius-large) !important;
+    transform: translateY(0) !important;
+    border-radius: 0.75rem !important;
   }
 
   :global(.list-mode) .post-card-title {
@@ -272,28 +272,40 @@ const descriptionText = description || remarkPluginFrontmatter.excerpt || "";
   /* === Desktop List Mode overrides === */
   @media (min-width: 768px) {
     :global(.list-mode) .post-card-wrapper {
-      flex-direction: column !important;
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) minmax(0, var(--coverWidth)) !important;
+      column-gap: 1rem !important;
+      align-items: stretch !important;
+      flex-direction: row !important;
     }
 
     :global(.list-mode) .post-card-wrapper.has-cover {
-      min-height: 0 !important;
+      min-height: 12rem !important;
     }
 
     :global(.list-mode) .has-cover .post-card-content {
+      grid-column: 1 !important;
+      min-width: 0 !important;
       width: 100% !important;
-      padding: 1.75rem 2.25rem !important;
+      padding: 1.75rem 0.5rem 1.75rem 2.25rem !important;
     }
 
     :global(.list-mode) .has-cover .post-card-image {
+      grid-column: 2 !important;
       position: relative !important;
-      top: auto !important;
-      bottom: auto !important;
-      right: auto !important;
-      width: 100% !important;
+      inset: auto !important;
+      align-self: center !important;
+      width: calc(100% - 1rem) !important;
       height: auto !important;
+      margin: 0.75rem 1rem 0.75rem 0 !important;
       aspect-ratio: 16 / 9 !important;
       transform: none !important;
-      border-radius: 0 0 var(--radius-large) var(--radius-large) !important;
+      border-radius: 0.75rem !important;
+    }
+
+    :global(.list-mode) .has-cover .post-card-title {
+      min-width: 0 !important;
+      overflow-wrap: anywhere !important;
     }
 
     :global(.list-mode) .post-card-title {

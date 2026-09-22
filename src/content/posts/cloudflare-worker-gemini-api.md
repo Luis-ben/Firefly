@@ -2,7 +2,7 @@
 title: "使用 Cloudflare Worker 完美反代 Gemini API：彻底解决地域限制"
 published: 2026-05-16
 description: "关于在国内不需要魔法就可以调动api"
-image: "/media/posts/2026/05/cloudflare-worker-gemini-api-20260516093141-ssgscd.png"
+image: ''
 tags: [cloudflare]
 category: "反代理"
 draft: false
@@ -35,7 +35,10 @@ comment: true
 4. 为你的 Worker 起一个名字（例如：gemini-proxy），然后点击右下角的 "部署"（Deploy）。
 
 
-![局部截取_20260516_171939](/media/posts/2026/05/cloudflare-worker-gemini-api-20260516092338-dv8ns0.png)
+
+
+![局部截取_20260922_191508](/media/posts/2026/09/cloudflare-worker-gemini-api-20260922111529-e7yfl6.png)
+
 
 
 第二步：编写反代代码

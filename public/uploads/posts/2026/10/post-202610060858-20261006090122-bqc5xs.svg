@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1281.289 130.9" width="1281.289" height="130.9" style="--bg:#FFFFFF;--fg:#3B3B3B;--line:#3B3B3B;--accent:#005FB8;--muted:#3B3B3BCC;--surface:#F8F8F8;--border:#3B3B3B;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 85%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+    <polygon points="0 0, 8 2.5, 0 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+  <marker id="arrowhead-start" markerWidth="8" markerHeight="5" refX="1" refY="2.5" orient="auto-start-reverse">
+    <polygon points="8 0, 0 2.5, 8 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+</defs>
+<polyline class="edge" data-from="A" data-to="B" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="205.697,65.45 253.697,65.45" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="B" data-to="C" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="480.156,65.45 528.156,65.45" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="C" data-to="D" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="713.119,65.45 761.119,65.45" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="D" data-to="E" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="957.938,65.45 1005.938,65.45" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<g class="node" data-id="A" data-label="原始文档 PDF/Word" data-shape="rectangle">
+  <rect x="40" y="47" width="165.697" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="122.8485" y="65.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">原始文档 PDF/Word</text>
+</g>
+<g class="node" data-id="B" data-label="document_parser: 解析与清洗" data-shape="rectangle">
+  <rect x="253.697" y="47" width="226.459" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="366.92650000000003" y="65.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">document_parser: 解析与清洗</text>
+</g>
+<g class="node" data-id="C" data-label="TextChunker: 窗口分块" data-shape="rectangle">
+  <rect x="528.156" y="47" width="184.96300000000002" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="620.6374999999999" y="65.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">TextChunker: 窗口分块</text>
+</g>
+<g class="node" data-id="D" data-label="Embedder: 向量嵌入模型" data-shape="rectangle">
+  <rect x="761.119" y="47" width="196.819" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="859.5285" y="65.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Embedder: 向量嵌入模型</text>
+</g>
+<g class="node" data-id="E" data-label="Faiss 向量库: 内积索引/持久化" data-shape="cylinder">
+  <rect x="1005.938" y="47" width="235.35099999999997" height="36.900000000000006" fill="var(--_node-fill)" stroke="none" />
+  <line x1="1005.938" y1="47" x2="1005.938" y2="83.9" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <line x1="1241.289" y1="47" x2="1241.289" y2="83.9" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="1123.6135" cy="83.9" rx="117.67549999999999" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <ellipse cx="1123.6135" cy="47" rx="117.67549999999999" ry="7" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1123.6135" y="65.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Faiss 向量库: 内积索引/持久化</text>
+</g>
+</svg>

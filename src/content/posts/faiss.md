@@ -35,16 +35,20 @@ RAG（检索增强生成） 的思路非常简单直观：把“开卷考试”�
 
 主要步骤拆解如下：
 
+```text
 Extract Data/Context：读取 PDF、Markdown、Word，提取纯文本与上下文。
 Clean：清洗多余噪音、空白符、非法排版字符。
 Split in Chunks：将万字长文切碎成小文本段。
 Embeddings：调用嵌入模型，将每段文字转换成高维向量（发“数字身份证”）。
 Build Semantic Index：构建向量索引并存盘（VectorStore）。
+```
+
 三、工程实现：数据处理四大金刚
 1. 文档解析与清洗（document_parser.py）
 
 现实中的文件各式各样，必须先做标准化解析和噪音清洗：
 
+```text
 python
 import re
 class DocumentParser:
@@ -59,6 +63,7 @@ class DocumentParser:
         # 2. 清理不可见特殊字符与乱码
         text = re.sub(r'[\x00-\x08\x0b-\x0c\x0e-\x1f]', '', text)
         return text.strip()
+```
 2. 文本分块器（TextChunker）
 
 为什么不能整篇文章一起存？
@@ -68,6 +73,7 @@ class DocumentParser:
 
 工程策略：采用固定批量窗口分块，同时设置 Overlap（重叠窗口）：
 
+```text
 python
 class TextChunker:
     def __init__(self, chunk_size: int = 400, overlap: int = 50):
@@ -84,6 +90,7 @@ class TextChunker:
             start += (self.chunk_size - self.overlap)
         return chunks
 
+```
 提示：保留 10%~15% 的 overlap 能避免关键句在切割边界处被无情腰斩。
 
 3. 向量嵌入（Embedder）：给每句话发“数字身份证”
@@ -97,6 +104,7 @@ class TextChunker:
 
 向量归一化（L2 Normalization）：入库前将每个向量单位化为模长为 1。
 内积索引（Inner Product, IP）：归一化之后，两向量的点积就等于余弦相似度（Cosine Similarity），检索效率飞跃提升。
+```text
 python
 import faiss
 import numpy as np
@@ -113,6 +121,7 @@ class VectorStore:
         self.docs.extend(chunks)
     def save(self, index_file: str):
         faiss.write_index(self.index, index_file)
+```
 四、本篇小结与下篇预告
 
 到这里，我们的“智能图书馆”就已经建好了：所有知识被切成规整的书签，标上了数字身份证，并且在 Faiss 中随时待命。

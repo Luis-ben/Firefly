@@ -1,4 +1,5 @@
 import { marked } from "marked";
+import { renderLiveCodeBlock } from "./live-code.js";
 
 const DEFAULT_CONTENT_ROOT = "src/content/posts";
 const DEFAULT_PAGE_SIZE = 10;
@@ -62,6 +63,7 @@ marked.setOptions({
 	breaks: true,
 	gfm: true,
 });
+marked.use({ renderer: { code: renderLiveCodeBlock } });
 
 const publicCache = new Map();
 let d1BootstrapPromise = null;

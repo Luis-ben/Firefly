@@ -1,4 +1,6 @@
-const ADMIN_VERSION = "2026-05-15-body-image-tools";
+import { insertCodeBlock, isInsertCodeShortcut, renderMarkdownPreview as renderMarkdown } from "./markdown.js";
+
+const ADMIN_VERSION = "2026-10-06-markdown-code-tools";
 
 const state = {
 	authenticated: false,
@@ -12,6 +14,8 @@ const els = {
 	authForm: document.querySelector("#auth-form"),
 	authStatus: document.querySelector("#auth-status"),
 	body: document.querySelector("#body-field"),
+	codeLanguage: document.querySelector("#code-language"),
+	insertCodeButton: document.querySelector("#insert-code-button"),
 	bodyUploadButton: document.querySelector("#body-upload-button"),
 	bodyUploadInput: document.querySelector("#body-upload-input"),
 	bodyUploadState: document.querySelector("#body-upload-state"),
@@ -116,6 +120,25 @@ function bindEvents() {
 		if (!file) return;
 		await uploadBodyImage(file);
 		input.value = "";
+	});
+	els.insertCodeButton.addEventListener("click", insertCodeBlockAtCursor);
+	els.body.addEventListener("keydown", (event) => {
+		if (isInsertCodeShortcut(event)) {
+			event.preventDefault();
+			insertCodeBlockAtCursor();
+		}
+	});
+	els.preview.addEventListener("click", async (event) => {
+		const button = event.target.closest("[data-copy-code]");
+		if (!button) return;
+		const code = button.closest(".preview-code-card")?.querySelector("code")?.textContent || "";
+		try {
+			await navigator.clipboard.writeText(code);
+			button.textContent = "已复制";
+			window.setTimeout(() => { button.textContent = "复制"; }, 1400);
+		} catch {
+			notify("复制失败，请手动选择代码", true);
+		}
 	});
 	els.saveButton.addEventListener("click", () => saveCurrent());
 	els.draftButton.addEventListener("click", () => saveCurrent(true));
@@ -507,34 +530,22 @@ function isUnauthorizedError(error) {
 function updatePreview() {
 	const text = els.body.value || "";
 	els.wordCount.textContent = `${text.replace(/\s+/g, "").length} 字`;
-	els.preview.innerHTML = renderMarkdownPreview(text);
+	els.preview.innerHTML = renderMarkdown(text);
 }
 
-function renderMarkdownPreview(markdown) {
-	if (!markdown.trim()) {
-		return "<p>暂无正文</p>";
-	}
-
-	const blocks = escapeHtml(markdown).split(/\n{2,}/);
-	return blocks
-		.map((block) => {
-			if (block.startsWith("```")) {
-				return `<pre><code>${block.replace(/^```[a-zA-Z0-9_-]*\n?/, "").replace(/```$/, "")}</code></pre>`;
-			}
-
-			const withInline = block
-				.replace(/^### (.*)$/gm, "<h3>$1</h3>")
-				.replace(/^## (.*)$/gm, "<h2>$1</h2>")
-				.replace(/^# (.*)$/gm, "<h1>$1</h1>")
-				.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-				.replace(/`([^`]+)`/g, "<code>$1</code>");
-
-			if (/^<h[1-3]>/.test(withInline)) return withInline;
-			return `<p>${withInline.replace(/\n/g, "<br />")}</p>`;
-		})
-		.join("");
+function insertCodeBlockAtCursor() {
+	const result = insertCodeBlock(
+		els.body.value,
+		els.body.selectionStart,
+		els.body.selectionEnd,
+		els.codeLanguage.value,
+	);
+	els.body.value = result.value;
+	els.body.focus();
+	els.body.setSelectionRange(result.selectionStart, result.selectionEnd);
+	state.dirty = true;
+	updatePreview();
 }
-
 function parseTags(value) {
 	return value
 		.split(/[,，]/)

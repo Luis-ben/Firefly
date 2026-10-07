@@ -214,3 +214,101 @@ body.wallpaper-transparent .custom-md {
   }
 }
 
+.custom-md > pre,
+.custom-md .live-code-block {
+  margin: 1rem 0;
+  border: 1px solid #d3d9d7;
+  border-radius: 8px;
+  background: #f6f8f7;
+  color: #2c3635;
+  overflow: hidden;
+}
+
+.custom-md > pre {
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.custom-md > pre > code,
+.custom-md .live-code-block pre code {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #2c3635;
+  padding: 0;
+  overflow: visible;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  white-space: pre;
+}
+
+.custom-md .live-code-block .live-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 38px;
+  border-bottom: 1px solid #d3d9d7;
+  background: #e9edeb;
+  padding: 4px 10px 4px 16px;
+}
+
+.custom-md .live-code-block .live-code-language {
+  color: #50615d;
+  font-family: "JetBrains Mono Variable", Consolas, monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.custom-md .live-code-block .live-code-copy {
+  min-height: 28px;
+  border: 1px solid #b9c4c0;
+  border-radius: 5px;
+  background: #fff;
+  color: #30423c;
+  padding: 0 9px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.custom-md .live-code-block .live-code-copy:hover,
+.custom-md .live-code-block .live-code-copy:focus-visible {
+  background: #e5f0ea;
+  outline-color: #2d8068;
+}
+
+.custom-md .live-code-block pre {
+  max-width: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #2c3635;
+  padding: 1rem 0;
+  overflow-x: auto;
+}
+
+.custom-md .live-code-block .live-code-line {
+  display: block;
+  min-height: 1.6em;
+  padding: 0 1rem 0 0;
+  counter-increment: live-code-line;
+}
+
+.custom-md .live-code-block code {
+  counter-reset: live-code-line;
+}
+
+.custom-md .live-code-block .live-code-line::before {
+  display: inline-block;
+  width: 2.75rem;
+  margin-right: 1.25rem;
+  border-right: 1px solid #d3d9d7;
+  color: #8a9691;
+  text-align: center;
+  content: counter(live-code-line);
+  user-select: none;
+}
+

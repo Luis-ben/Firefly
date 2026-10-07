@@ -59,6 +59,24 @@ const { siteTitle } = Astro.props;
 			].join("::");
 		}
 
+		async function copyLiveCode(event) {
+			const button = event.target.closest?.(".live-code-copy");
+			if (!button || !document.getElementById("live-post-main")?.contains(button)) return;
+			const lines = button.closest(".live-code-block")?.querySelectorAll(".live-code-line");
+			if (!lines) return;
+			try {
+				await navigator.clipboard.writeText(
+					Array.from(lines, (line) => line.textContent || "").join("\n"),
+				);
+				button.textContent = "已复制";
+				window.setTimeout(() => { if (button.isConnected) button.textContent = "复制"; }, 1400);
+			} catch {
+				button.textContent = "复制失败";
+			}
+		}
+
+		document.addEventListener("click", copyLiveCode);
+
 		async function syncPost() {
 			const root = document.getElementById("live-post-main");
 			if (!shouldEnableLivePost()) {
@@ -178,6 +196,7 @@ const { siteTitle } = Astro.props;
 		window.__fireflyLivePostController = {
 			destroy() {
 				destroyed = true;
+				document.removeEventListener("click", copyLiveCode);
 				if (window.__fireflyLivePostTimer) {
 					window.clearInterval(window.__fireflyLivePostTimer);
 				}

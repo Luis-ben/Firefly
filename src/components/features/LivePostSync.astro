@@ -20,6 +20,77 @@ const { siteTitle } = Astro.props;
 		let activeSlug = "";
 		let destroyed = false;
 		let hasCompletedInitialSync = false;
+		let mermaidLoadPromise = null;
+
+		function loadMermaid() {
+			if (window.mermaid && typeof window.mermaid.render === "function") {
+				return Promise.resolve(window.mermaid);
+			}
+			if (mermaidLoadPromise) return mermaidLoadPromise;
+
+			mermaidLoadPromise = new Promise((resolve, reject) => {
+				const load = (src, fallback) => {
+					const script = document.createElement("script");
+					script.src = src;
+					script.onload = () => {
+						if (window.mermaid) resolve(window.mermaid);
+						else reject(new Error("Mermaid library unavailable"));
+					};
+					script.onerror = () => {
+						if (fallback) load(fallback);
+						else reject(new Error("Mermaid library failed to load"));
+					};
+					document.head.appendChild(script);
+				};
+				load(
+					"https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.12.0/mermaid.min.js",
+					"https://unpkg.com/mermaid@11.12.0/dist/mermaid.min.js",
+				);
+			});
+			return mermaidLoadPromise;
+		}
+
+		async function renderLiveMermaid(root) {
+			const elements = Array.from(
+				root.querySelectorAll?.(".mermaid[data-mermaid-code]") || [],
+			);
+			if (!elements.length) return;
+
+			try {
+				const mermaid = await loadMermaid();
+				const isDark = document.documentElement.classList.contains("dark");
+				mermaid.initialize({
+					startOnLoad: false,
+					theme: isDark ? "dark" : "default",
+					securityLevel: "loose",
+					errorLevel: "warn",
+					logLevel: "error",
+				});
+				await Promise.all(
+					elements.map(async (element, index) => {
+						const code = element.getAttribute("data-mermaid-code") || "";
+						try {
+							const result = await mermaid.render(
+								`live-mermaid-${Date.now()}-${index}`,
+								code,
+							);
+							element.innerHTML = result.svg;
+							const svg = element.querySelector("svg");
+							if (svg) {
+								svg.setAttribute("width", "100%");
+								svg.removeAttribute("height");
+								svg.style.maxWidth = "100%";
+								svg.style.height = "auto";
+							}
+						} catch {
+							element.classList.add("mermaid-error");
+						}
+					}),
+				);
+			} catch {
+				// Keep the Mermaid source visible when the CDN is unavailable.
+			}
+		}
 
 		function setSyncState(root, state) {
 			if (root) root.setAttribute("data-live-sync", state);
@@ -142,6 +213,7 @@ const { siteTitle } = Astro.props;
 					}
 					lastSignature = nextSignature;
 					root.innerHTML = data.mainHtml;
+					await renderLiveMermaid(root);
 				}
 				setSyncState(root, "ready");
 				hasCompletedInitialSync = true;

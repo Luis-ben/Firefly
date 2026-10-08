@@ -3,9 +3,9 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<meta name="firefly-admin-version" content="2026-10-06-markdown-code-tools" />
+		<meta name="firefly-admin-version" content="2026-10-08-mermaid-import-v2" />
 		<title>Firefly 管理后台</title>
-		<link rel="stylesheet" href="/admin/app.css?v=20261006-markdown-code-tools" />
+		<link rel="stylesheet" href="/admin/app.css?v=20261008-mermaid-import-v2" />
 	</head>
 	<body>
 		<div class="app-shell">
@@ -119,6 +119,7 @@
 										<option value="javascript">JavaScript</option>
 										<option value="json">JSON</option>
 										<option value="markdown">Markdown</option>
+										<option value="mermaid">Mermaid 图表</option>
 										<option value="python">Python</option>
 										<option value="sql">SQL</option>
 										<option value="typescript">TypeScript</option>
@@ -126,6 +127,9 @@
 									</select>
 								</div>
 								<button class="secondary" id="insert-code-button" type="button" title="插入代码块 (Alt+K 或 Ctrl+Shift+K)" aria-keyshortcuts="Alt+K Ctrl+Shift+K">插入代码块</button>
+								<input id="markdown-import-input" type="file" accept=".md,text/markdown" hidden />
+								<button class="secondary" id="markdown-import-button" type="button">导入 Markdown 文件</button>
+								<span class="field-help">导入 .md 文章文件；下方按钮仅用于图片。</span>
 							</div>
 							<div class="field-actions">
 								<input id="body-upload-input" type="file" accept="image/*" hidden />
@@ -147,6 +151,6 @@
 		</div>
 
 		<div class="toast" id="toast" role="status" aria-live="polite"></div>
-		<script src="/admin/app.js?v=20261006-markdown-code-tools" type="module"></script>
+		<script src="/admin/app.js?v=20261008-mermaid-import-v2" type="module"></script>
 	</body>
 </html>

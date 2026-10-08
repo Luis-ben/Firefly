@@ -1,4 +1,5 @@
 import { marked } from "marked";
+import { parseFrontmatter } from "./frontmatter.js";
 import { renderLiveCodeBlock } from "./live-code.js";
 
 const DEFAULT_CONTENT_ROOT = "src/content/posts";
@@ -1326,40 +1327,6 @@ function buildFrontmatter(payload, existing = {}) {
 	return frontmatter;
 }
 
-function parseFrontmatter(raw) {
-	const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
-	if (!match) return { body: raw, frontmatter: {} };
-
-	const frontmatter = {};
-	for (const line of match[1].split(/\r?\n/)) {
-		if (!line.trim() || line.trim().startsWith("#")) continue;
-		const field = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
-		if (!field) continue;
-		frontmatter[field[1]] = parseYamlValue(field[2]);
-	}
-
-	return {
-		body: raw.slice(match[0].length),
-		frontmatter,
-	};
-}
-
-function parseYamlValue(value) {
-	const trimmed = value.trim();
-	if (trimmed === "true") return true;
-	if (trimmed === "false") return false;
-	if (trimmed === "null") return null;
-	if (trimmed === "[]" || trimmed === "") return trimmed === "[]" ? [] : "";
-	if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-		return trimmed
-			.slice(1, -1)
-			.split(",")
-			.map((item) => stripQuotes(item.trim()))
-			.filter(Boolean);
-	}
-	return stripQuotes(trimmed);
-}
-
 function stringifyPost(frontmatter, body) {
 	const preferredKeys = [
 		"title",
@@ -1410,16 +1377,6 @@ function formatYamlString(value) {
 	if (!value) return "''";
 	if (/^[A-Za-z0-9_-]+$/.test(value)) return value;
 	return JSON.stringify(value);
-}
-
-function stripQuotes(value) {
-	if (
-		(value.startsWith('"') && value.endsWith('"')) ||
-		(value.startsWith("'") && value.endsWith("'"))
-	) {
-		return value.slice(1, -1);
-	}
-	return value;
 }
 
 function toGithubPath(env, relativePath) {

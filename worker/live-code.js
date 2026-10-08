@@ -3,6 +3,11 @@ export function renderLiveCodeBlock({ text, lang }) {
 	const language = /^[a-z0-9_+#.-]{1,32}$/i.test(rawLanguage)
 		? rawLanguage
 		: "text";
+	const code = String(text || "").replace(/\r\n?/g, "\n");
+	if (language.toLowerCase() === "mermaid") {
+		const safeCode = escapeHtml(code);
+		return '<div class="mermaid-diagram-container live-mermaid"><div class="mermaid-wrapper"><div class="mermaid" data-mermaid-code="' + safeCode + '"><pre><code>' + safeCode + '</code></pre></div></div></div>';
+	}
 	const lines = String(text || "")
 		.replace(/\r\n?/g, "\n")
 		.replace(/\n$/, "")

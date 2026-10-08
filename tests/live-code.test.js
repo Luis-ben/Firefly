@@ -24,3 +24,12 @@ test("live code escapes HTML and rejects unsafe language labels", () => {
 	assert.doesNotMatch(html, /<script>|onerror=/);
 	assert.match(html, /class="live-code-language">text</);
 });
+
+test("renders Mermaid code as a diagram container instead of a code toolbar", () => {
+	const markdown = String.fromCharCode(96).repeat(3) + "mermaid\nsequenceDiagram\n    User->>App: hello\n" + String.fromCharCode(96).repeat(3);
+	const html = marked.parse(markdown, { renderer: { code: renderLiveCodeBlock } });
+
+	assert.match(html, /class=\"mermaid-diagram-container[^\"]*\"/);
+	assert.match(html, /data-mermaid-code=/);
+	assert.doesNotMatch(html, /live-code-copy/);
+});

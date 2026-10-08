@@ -438,6 +438,34 @@ textarea:focus {
 	padding: 2px 5px;
 }
 
+.preview-mermaid {
+	margin: 12px 0 16px;
+	min-height: 110px;
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	background: var(--panel-soft);
+	overflow: auto;
+	padding: 16px;
+	text-align: center;
+}
+
+.preview-mermaid pre {
+	margin: 0;
+	text-align: left;
+	white-space: pre-wrap;
+}
+
+.preview-mermaid svg {
+	display: block;
+	margin: 0 auto;
+	max-width: 100%;
+	height: auto;
+}
+
+.preview-mermaid-error {
+	border-color: var(--warn);
+}
+
 .preview-code-card {
 	overflow: hidden;
 	margin: 0 0 14px;

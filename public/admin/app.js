@@ -1,14 +1,23 @@
-import { insertCodeBlock, isInsertCodeShortcut, renderMarkdownPreview as renderMarkdown } from "./markdown.js";
+import {
+	insertCodeBlock,
+	isInsertCodeShortcut,
+	parseMarkdownImport,
+	renderMarkdownPreview as renderMarkdown,
+} from "./markdown.js";
 
-const ADMIN_VERSION = "2026-10-06-markdown-code-tools";
+const ADMIN_VERSION = "2026-10-08-mermaid-import-v2";
 
 const state = {
 	authenticated: false,
 	current: null,
 	dirty: false,
+	busy: false,
 	posts: [],
+	previewRevision: 0,
 	token: localStorage.getItem("firefly-admin-token") || "",
 };
+
+let mermaidLoadPromise = null;
 
 const els = {
 	authForm: document.querySelector("#auth-form"),
@@ -19,6 +28,8 @@ const els = {
 	bodyUploadButton: document.querySelector("#body-upload-button"),
 	bodyUploadInput: document.querySelector("#body-upload-input"),
 	bodyUploadState: document.querySelector("#body-upload-state"),
+	markdownImportButton: document.querySelector("#markdown-import-button"),
+	markdownImportInput: document.querySelector("#markdown-import-input"),
 	category: document.querySelector("#category-field"),
 	comment: document.querySelector("#comment-field"),
 	coverUploadButton: document.querySelector("#cover-upload-button"),
@@ -104,6 +115,11 @@ function bindEvents() {
 		const input = event.target;
 		const file = input.files?.[0];
 		if (!file) return;
+		if (!isImageFile(file)) {
+			notify("这是 Markdown 文件，请点击“导入 Markdown 文件”，图片上传入口不能处理 .md", true);
+			input.value = "";
+			return;
+		}
 		await uploadCoverImage(file);
 		input.value = "";
 	});
@@ -118,7 +134,31 @@ function bindEvents() {
 		const input = event.target;
 		const file = input.files?.[0];
 		if (!file) return;
+		if (!isImageFile(file)) {
+			notify("这是 Markdown 文件，请点击“导入 Markdown 文件”，图片上传入口不能处理 .md", true);
+			input.value = "";
+			return;
+		}
 		await uploadBodyImage(file);
+		input.value = "";
+	});
+	els.markdownImportButton.addEventListener("click", () =>
+		els.markdownImportInput.click(),
+	);
+	els.markdownImportInput.addEventListener("change", async (event) => {
+		const input = event.target;
+		const file = input.files?.[0];
+		if (!file) return;
+		if (state.dirty || state.current?.id) {
+			const message = state.dirty
+				? "当前编辑内容尚未保存。导入会切换为一篇新文章，确定继续吗？"
+				: "导入会新建文章，不会修改当前已保存文章。确定继续吗？";
+			if (!confirm(message)) {
+				input.value = "";
+				return;
+			}
+		}
+		await importMarkdownFile(file);
 		input.value = "";
 	});
 	els.insertCodeButton.addEventListener("click", insertCodeBlockAtCursor);
@@ -184,6 +224,7 @@ function updateAuthState() {
 	els.logoutButton.disabled = !hasToken;
 	els.refreshButton.disabled = !state.authenticated;
 	els.newPostButton.disabled = !state.authenticated;
+	els.markdownImportButton.disabled = !state.authenticated || state.busy;
 }
 
 async function request(path, options = {}) {
@@ -482,6 +523,7 @@ function collectPayload(forceDraft) {
 	return {
 		body: els.body.value,
 		frontmatter: {
+			...state.current?.frontmatter,
 			category: els.category.value.trim(),
 			comment: els.comment.checked,
 			description: els.description.value.trim(),
@@ -496,8 +538,66 @@ function collectPayload(forceDraft) {
 	};
 }
 
+async function importMarkdownFile(file) {
+	if (file.size > 5 * 1024 * 1024) {
+		notify("Markdown 文件不能超过 5 MB", true);
+		return;
+	}
+
+	try {
+		const imported = parseMarkdownImport(await file.text(), file.name);
+		const defaults = createEmptyPost().frontmatter;
+		const frontmatter = {
+			...defaults,
+			...imported.frontmatter,
+			category: String(imported.frontmatter.category || ""),
+			comment: imported.frontmatter.comment !== false,
+			description: String(imported.frontmatter.description || ""),
+			draft: imported.frontmatter.draft == null
+				? true
+				: imported.frontmatter.draft === true,
+			image: String(imported.frontmatter.image || ""),
+			pinned: imported.frontmatter.pinned === true,
+			published: formatDate(imported.frontmatter.published) || today(),
+			tags: normalizeImportedTags(imported.frontmatter.tags),
+			title: String(imported.frontmatter.title || titleFromFileName(file.name)),
+		};
+		renderEditor({
+			body: imported.body,
+			frontmatter,
+			id: "",
+			relativePath: "",
+			suggestedSlug: imported.slug,
+		});
+		state.dirty = true;
+		notify("Markdown 已导入为新文章，请检查后保存或发布");
+	} catch (error) {
+		notify(error.message || "Markdown 导入失败", true);
+	}
+}
+
+function normalizeImportedTags(value) {
+	if (Array.isArray(value)) return value.map((tag) => String(tag)).filter(Boolean);
+	if (typeof value === "string") return parseTags(value);
+	return [];
+}
+
+function titleFromFileName(fileName) {
+	return removeFileExtension(fileName).replace(/[-_]+/g, " ").trim();
+}
+
+function isImageFile(file) {
+	return (
+		String(file.type || "").toLowerCase().startsWith("image/") ||
+		/\.(avif|gif|jpe?g|png|svg|webp)$/i.test(String(file.name || ""))
+	);
+}
+
 function setEditorEnabled(enabled) {
 	for (const field of els.form.elements) {
+		if (field === els.markdownImportButton || field === els.markdownImportInput) {
+			continue;
+		}
 		field.disabled = !enabled;
 	}
 
@@ -508,6 +608,7 @@ function setEditorEnabled(enabled) {
 }
 
 function setBusy(busy) {
+	state.busy = busy;
 	for (const button of document.querySelectorAll("button")) {
 		if (button.classList.contains("link-button")) continue;
 		button.disabled = busy || (!state.token && button.id !== "");
@@ -529,8 +630,85 @@ function isUnauthorizedError(error) {
 
 function updatePreview() {
 	const text = els.body.value || "";
+	const revision = ++state.previewRevision;
 	els.wordCount.textContent = `${text.replace(/\s+/g, "").length} 字`;
 	els.preview.innerHTML = renderMarkdown(text);
+	void renderMermaidPreviews(revision);
+}
+
+async function renderMermaidPreviews(revision) {
+	const elements = Array.from(
+		els.preview.querySelectorAll(".preview-mermaid[data-mermaid-code]"),
+	);
+	if (!elements.length) return;
+
+	try {
+		const mermaid = await loadMermaid();
+		if (revision !== state.previewRevision) return;
+		mermaid.initialize({
+			startOnLoad: false,
+			theme: document.documentElement.classList.contains("dark")
+				? "dark"
+				: "default",
+			securityLevel: "loose",
+			errorLevel: "warn",
+			logLevel: "error",
+		});
+
+		await Promise.all(
+			elements.map(async (element, index) => {
+			const code = element.getAttribute("data-mermaid-code") || "";
+			try {
+				const result = await mermaid.render(
+					`admin-mermaid-${Date.now()}-${index}`,
+					code,
+				);
+				if (revision !== state.previewRevision) return;
+				element.innerHTML = result.svg;
+				const svg = element.querySelector("svg");
+				if (svg) {
+					svg.setAttribute("width", "100%");
+					svg.removeAttribute("height");
+					svg.style.maxWidth = "100%";
+					svg.style.height = "auto";
+				}
+			} catch {
+				element.classList.add("preview-mermaid-error");
+			}
+		}),
+		);
+	} catch {
+		// The original Mermaid source remains visible as a safe fallback.
+		elements.forEach((element) => element.classList.add("preview-mermaid-error"));
+	}
+}
+
+function loadMermaid() {
+	if (window.mermaid && typeof window.mermaid.render === "function") {
+		return Promise.resolve(window.mermaid);
+	}
+	if (mermaidLoadPromise) return mermaidLoadPromise;
+
+	mermaidLoadPromise = new Promise((resolve, reject) => {
+		const load = (src, fallback) => {
+			const script = document.createElement("script");
+			script.src = src;
+			script.onload = () => {
+				if (window.mermaid) resolve(window.mermaid);
+				else reject(new Error("Mermaid library unavailable"));
+			};
+			script.onerror = () => {
+				if (fallback) load(fallback);
+				else reject(new Error("Mermaid library failed to load"));
+			};
+			document.head.appendChild(script);
+		};
+		load(
+			"https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.12.0/mermaid.min.js",
+			"https://unpkg.com/mermaid@11.12.0/dist/mermaid.min.js",
+		);
+	});
+	return mermaidLoadPromise;
 }
 
 function insertCodeBlockAtCursor() {

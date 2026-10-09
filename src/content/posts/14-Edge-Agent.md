@@ -1,7 +1,7 @@
 ---
 title: "14 Edge Agent"
 published: 2026-09-15
-description: ''
+description: "定位：系统性阐明端侧 Agent 的核心原理、三层运行时架构、设备硬约束下的安全出域门，以及从模型量化到整机闭环的工业界研发全貌。"
 image: ''
 tags: []
 category: Agent
@@ -12,9 +12,6 @@ comment: true
 
 # 14 - 端侧 Agent（On-Device Agent）架构设计与工程落地
 
-> **定位**：系统性阐明端侧 Agent 的核心原理、三层运行时架构、设备硬约束下的安全出域门，以及从模型量化到整机闭环的工业界研发全貌。
-
----
 
 ## 一、什么是端侧 Agent？
 
